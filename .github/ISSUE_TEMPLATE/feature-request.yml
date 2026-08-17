@@ -1,0 +1,40 @@
+name: Fork-specific improvement
+description: Propose a focused improvement to Alexi5000's agent-engineering reference fork.
+title: "proposal: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for fork-specific improvements. For a generally useful upstream catalog change, consider proposing it to the upstream repository as well.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Intended outcome
+      description: Explain the user, learner, developer, or operator problem this improves.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope and affected paths
+      description: Identify the example, documentation, test, or automation paths involved.
+    validations:
+      required: true
+  - type: textarea
+    id: agent-safety
+    attributes:
+      label: Agent and automation considerations
+      description: Describe provider assumptions, tool access, credentials handling, external side effects, privacy, and evaluation considerations.
+    validations:
+      required: true
+  - type: checkboxes
+    id: attribution
+    attributes:
+      label: Attribution and review
+      options:
+        - label: I reviewed FORK_POLICY.md and will preserve upstream credit and licensing.
+          required: true
+        - label: I will not include secrets or private data.
+          required: true

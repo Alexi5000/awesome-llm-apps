@@ -48,7 +48,7 @@ AI Agents · Multi-agent Teams · MCP Agents · RAG · Voice Agents · Agent Ski
 </p>
 
 <p>
-<a href="#-quick-start"><kbd> &nbsp; 🚀 Quick Start &nbsp; </kbd></a>
+<a href="#verified-setup"><kbd> &nbsp; 🚀 Verified Setup &nbsp; </kbd></a>
 <a href="#-featured-ai-projects"><kbd> &nbsp; 📂 Browse Templates &nbsp; </kbd></a>
 <a href="https://www.theunwindai.com"><kbd> &nbsp; 📚 Step-by-Step Tutorials &nbsp; </kbd></a>
 </p>
@@ -61,7 +61,20 @@ AI Agents · Multi-agent Teams · MCP Agents · RAG · Voice Agents · Agent Ski
 
 ---
 
-## 💡 Why this exists
+## Alexi's fork purpose
+
+This fork is **Alexi5000’s applied agent-engineering reference library**. It is maintained as a practical review surface for the workflows Alex has developed across more than a year of agent building, automation design, and hands-on work with Cursor, Claude, Codex-class coding agents, MCP integrations, retrieval systems, and multi-agent orchestration.
+
+The upstream catalog remains the foundation. This fork adds a clear operating model for evaluating examples as production-minded learning artifacts: traceable setup, explicit safety boundaries, maintainable integrations, and reproducible repository quality checks. It is a reference collection rather than a claim that every included example is production-ready for every environment.
+
+| This fork is for | How to use it |
+|---|---|
+| **Agent builders** | Compare patterns for tools, MCP, routing, RAG, memory, and multi-agent workflows before adapting one to a real product. |
+| **Automation engineers** | Evaluate integration boundaries, credentials handling, reviewability, and operational fit before connecting external systems. |
+| **AI-assisted developers** | Use the examples as structured prompts and implementation references with Cursor, Claude, Codex-class assistants, or comparable coding environments. |
+| **Reviewers and contributors** | Propose focused improvements that preserve upstream attribution while raising reproducibility and documentation quality. |
+
+## Upstream catalog background
 
 You shouldn't have to rebuild the same RAG pipeline, agent loop, or MCP integration from scratch every time you start a new LLM project.
 
@@ -76,16 +89,40 @@ You shouldn't have to rebuild the same RAG pipeline, agent loop, or MCP integrat
 
 > ⭐ **If this saves you time, [star the repo](https://github.com/Shubhamsaboo/awesome-llm-apps/stargazers) - that's how the next developer discovers it.**
 
-## 🚀 Quick Start
+## Verified setup
 
-Run your first agent in **30 seconds**:
+Use Python 3.11 or newer. Each example owns its dependencies, so install only the requirements for the project you are evaluating. The following path starts the travel-agent example in an isolated virtual environment.
 
 ```bash
-git clone https://github.com/Shubhamsaboo/awesome-llm-apps.git
-cd awesome-llm-apps/starter_ai_agents/ai_travel_agent
-pip install -r requirements.txt
+git clone https://github.com/Alexi5000/awesome-llm-apps.git
+cd awesome-llm-apps
+python3 -m venv .venv
+source .venv/bin/activate
+
+cd starter_ai_agents/ai_travel_agent
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 streamlit run travel_agent.py
 ```
+
+Before opening a pull request, validate the collection’s repository contract from the repository root:
+
+```bash
+python3 -m unittest discover -s tests -p "test_*.py"
+python3 -m compileall -q \
+  starter_ai_agents advanced_ai_agents advanced_llm_apps \
+  mcp_ai_agents rag_tutorials voice_ai_agents
+```
+
+## Use cases
+
+| Goal | Starting point |
+|---|---|
+| Learn an agent loop or tool pattern | Browse [`starter_ai_agents`](./starter_ai_agents) and progress to [`advanced_ai_agents`](./advanced_ai_agents). |
+| Prototype a tool-connected workflow | Review [`mcp_ai_agents`](./mcp_ai_agents) alongside the provider-specific README and requirements for the selected example. |
+| Design an evidence-grounded retrieval flow | Explore [`rag_tutorials`](./rag_tutorials), then adapt a single project with your own corpus, evaluation data, and access controls. |
+| Build a voice or multimodal experience | Start with [`voice_ai_agents`](./voice_ai_agents) or the multimodal examples in the advanced collection. |
+| Compare framework trade-offs | Use [`ai_agent_framework_crash_course`](./ai_agent_framework_crash_course) as a learning reference before choosing a production dependency. |
 
 
 ## 🔥 Featured This Month
@@ -311,6 +348,16 @@ streamlit run travel_agent.py
   - Multi‑agent patterns; agent handoffs
   - Swarm orchestration; routing logic
 
+
+## Support and contribution path
+
+Use [GitHub Issues](https://github.com/Alexi5000/awesome-llm-apps/issues) for reproducible documentation defects, broken catalog paths, or focused discussion of a fork-specific improvement. For contribution expectations, security reporting, conduct standards, and the upstream-sync policy, read [CONTRIBUTING.md](./CONTRIBUTING.md), [SECURITY.md](./SECURITY.md), [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md), [SUPPORT.md](./SUPPORT.md), and [FORK_POLICY.md](./FORK_POLICY.md).
+
+Do not place API keys, OAuth tokens, private datasets, customer information, or unreported vulnerabilities in issues or pull requests. Every agent example should be reviewed against the provider’s current documentation and your own security, privacy, and deployment requirements before use.
+
+## Upstream attribution
+
+This repository is a fork of [Shubhamsaboo/awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps). The upstream catalog, its authors, and its contributors retain full credit for their work. Fork-specific documentation and quality controls are maintained by Alexi5000 and should not be represented as upstream changes unless separately contributed and accepted upstream.
 
 ## 🙏 Built by
 

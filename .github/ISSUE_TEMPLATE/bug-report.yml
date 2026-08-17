@@ -1,0 +1,40 @@
+name: Catalog or documentation defect
+description: Report a reproducible issue in this fork's documentation, structure, or example guidance.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for improving the catalog. Do not include API keys, OAuth tokens, private datasets, customer information, or vulnerability details in this form.
+  - type: input
+    id: path
+    attributes:
+      label: Affected path
+      description: Provide the example, document, or catalog path involved.
+      placeholder: starter_ai_agents/example_name/README.md
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and observed behavior
+      description: Include sanitized commands, Python version, provider/framework, and the observed result.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior or documentation outcome
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed credentials, private data, and unreported security details.
+          required: true
+        - label: This is not a security report; security concerns follow SECURITY.md.
+          required: true
