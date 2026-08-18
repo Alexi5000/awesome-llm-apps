@@ -91,7 +91,7 @@ You shouldn't have to rebuild the same RAG pipeline, agent loop, or MCP integrat
 
 ## Verified setup
 
-Use Python 3.11 or newer. Each example owns its dependencies, so install only the requirements for the project you are evaluating. The following path starts the travel-agent example in an isolated virtual environment.
+Use Python 3.12 or newer. Each example owns its dependencies, so install only the requirements for the project you are evaluating. The following path starts the travel-agent example in an isolated virtual environment.
 
 ```bash
 git clone https://github.com/Alexi5000/awesome-llm-apps.git
