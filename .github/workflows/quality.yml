@@ -1,0 +1,34 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Catalog contract and source compilation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run catalog smoke tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Compile Python example sources
+        run: >-
+          python -m compileall -q
+          starter_ai_agents advanced_ai_agents advanced_llm_apps
+          mcp_ai_agents rag_tutorials voice_ai_agents
