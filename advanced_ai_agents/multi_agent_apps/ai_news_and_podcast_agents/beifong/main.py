@@ -8,6 +8,7 @@ import aiofiles
 from contextlib import asynccontextmanager
 from routers import article_router, podcast_router, source_router, task_router, podcast_config_router, async_podcast_agent_router, social_media_router
 from services.db_init import init_databases
+from services.safe_paths import media_path
 from dotenv import load_dotenv
 
 
@@ -58,7 +59,7 @@ app.include_router(social_media_router.router, prefix="/api/social-media", tags=
 
 @app.get("/stream-audio/{filename}")
 async def stream_audio(filename: str, request: Request):
-    audio_path = os.path.join("podcasts/audio", filename)
+    audio_path = media_path("podcasts/audio", filename)
     if not os.path.exists(audio_path):
         return Response(status_code=404, content="Audio file not found")
     file_size = os.path.getsize(audio_path)
@@ -100,7 +101,7 @@ async def stream_audio(filename: str, request: Request):
 
 @app.get("/stream-recording/{session_id}/{filename}")
 async def stream_recording(session_id: str, filename: str, request: Request):
-    recording_path = os.path.join("podcasts/recordings", session_id, filename)
+    recording_path = media_path("podcasts/recordings", session_id, filename)
     if not os.path.exists(recording_path):
         return Response(status_code=404, content="Recording video not found")
     file_size = os.path.getsize(recording_path)
@@ -165,7 +166,7 @@ async def manifest():
 
 @app.get("/logo{rest_of_path:path}")
 async def logo(rest_of_path: str):
-    logo_path = os.path.join(CLIENT_BUILD_PATH, f"logo{rest_of_path}")
+    logo_path = media_path(CLIENT_BUILD_PATH, f"logo{rest_of_path}")
     if os.path.exists(logo_path):
         return FileResponse(logo_path)
     return {"detail": "Logo not found"}

@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from models.podcast_schemas import Podcast, PodcastDetail, PodcastCreate, PodcastUpdate, PaginatedPodcasts
 from services.podcast_service import podcast_service
+from services.safe_paths import media_path
 
 router = APIRouter()
 
@@ -194,7 +195,7 @@ async def get_audio_file(filename: str = Path(..., description="The filename of 
 
     Returns the audio file as a download.
     """
-    audio_path = os.path.join("podcasts", "audio", filename)
+    audio_path = media_path(os.path.join("podcasts", "audio"), filename)
     if not os.path.exists(audio_path):
         raise HTTPException(status_code=404, detail="Audio file not found")
     return FileResponse(audio_path)
