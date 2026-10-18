@@ -1,4 +1,5 @@
 import streamlit as st
+from google_doc_links import extract_google_doc_link
 from agno.agent import Agent
 from agno.run.agent import RunOutput
 from agno.models.openai import OpenAIChat
@@ -150,14 +151,6 @@ if st.button("Start"):
                 f"the topic is: {st.session_state['topic']},Don't forget to add the Google Doc link in your response."
             )
 
-        # Extract Google Doc links from the responses
-        def extract_google_doc_link(response_content):
-            # Assuming the Google Doc link is embedded in the response content
-            # You may need to adjust this logic based on the actual response format
-            if "https://docs.google.com" in response_content:
-                return response_content.split("https://docs.google.com")[1].split()[0]
-            return None
-
         professor_doc_link = extract_google_doc_link(professor_response.content)
         academic_advisor_doc_link = extract_google_doc_link(academic_advisor_response.content)
         research_librarian_doc_link = extract_google_doc_link(research_librarian_response.content)
@@ -166,13 +159,13 @@ if st.button("Start"):
         # Display Google Doc links at the top of the Streamlit UI
         st.markdown("### Google Doc Links:")
         if professor_doc_link:
-            st.markdown(f"- **Professor Document:** [View Document](https://docs.google.com{professor_doc_link})")
+            st.markdown(f"- **Professor Document:** [View Document]({professor_doc_link})")
         if academic_advisor_doc_link:
-            st.markdown(f"- **Academic Advisor Document:** [View Document](https://docs.google.com{academic_advisor_doc_link})")
+            st.markdown(f"- **Academic Advisor Document:** [View Document]({academic_advisor_doc_link})")
         if research_librarian_doc_link:
-            st.markdown(f"- **Research Librarian Document:** [View Document](https://docs.google.com{research_librarian_doc_link})")
+            st.markdown(f"- **Research Librarian Document:** [View Document]({research_librarian_doc_link})")
         if teaching_assistant_doc_link:
-            st.markdown(f"- **Teaching Assistant Document:** [View Document](https://docs.google.com{teaching_assistant_doc_link})")
+            st.markdown(f"- **Teaching Assistant Document:** [View Document]({teaching_assistant_doc_link})")
 
         # Display responses in the Streamlit UI using pprint_run_response
         st.markdown("### Professor Response:")

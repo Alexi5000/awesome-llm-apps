@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -34,7 +35,7 @@ const ArticleDetail = () => {
    const truncateHtml = (html, limit) => {
       if (!html) return '';
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = html;
+      tempDiv.innerHTML = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
       const textContent = tempDiv.textContent || tempDiv.innerText;
       if (textContent.length <= limit) {
          return html;
@@ -214,7 +215,7 @@ const ArticleDetail = () => {
                         <p className="mb-4">{contentToDisplay}</p>
                      ) : (
                         <div
-                           dangerouslySetInnerHTML={{ __html: contentToDisplay }}
+                           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contentToDisplay, { USE_PROFILES: { html: true } }) }}
                            className="article-content"
                         ></div>
                      )}

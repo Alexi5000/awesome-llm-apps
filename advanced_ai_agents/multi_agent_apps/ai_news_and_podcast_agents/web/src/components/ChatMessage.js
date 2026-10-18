@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import React, { useState, useEffect } from 'react';
 
 import api from '../services/api';
@@ -317,7 +318,7 @@ const ChatMessage = ({ message, role }) => {
          </div>
          <div
             className="max-w-[80%] bg-gradient-to-r from-gray-800 to-gray-900 text-gray-200 px-4 py-3 rounded-md rounded-tl-none text-sm shadow-md"
-            dangerouslySetInnerHTML={{ __html: formatMarkdown(message) }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatMarkdown(message), { USE_PROFILES: { html: true } }) }}
          />
       </div>
    );
