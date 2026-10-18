@@ -151,8 +151,7 @@ def create_routing_agent() -> Agent:
             "4. Return ONLY the database name, no other text or explanation",
             "5. If you're not confident about the routing, return an empty response"
         ],
-        markdown=False,
-        show_tool_calls=False
+        markdown=False
     )
 
 def route_query(question: str) -> Optional[DatabaseType]:
@@ -233,7 +232,7 @@ def query_database(db: Qdrant, question: str) -> tuple[str, list]:
             search_kwargs={"k": 4}
         )
 
-        relevant_docs = retriever.get_relevant_documents(question)
+        relevant_docs = retriever.invoke(question)
 
         if relevant_docs:
             # Use simpler chain creation with hub prompt
