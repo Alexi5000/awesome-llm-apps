@@ -43,6 +43,29 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class DependencyRuntimeTests(unittest.TestCase):
+    def test_clickhouse_metadata_is_parameterized(self):
+        from unittest.mock import Mock
+        from agno.vectordb.clickhouse import Clickhouse
+
+        store = Clickhouse.__new__(Clickhouse)
+        store.client = Mock()
+        store.database_name = "test"
+        store.table_name = "documents"
+        key = "owner') = '' OR 1=1 --"
+        value = "' OR 1=1 --"
+        self.assertTrue(store.delete_by_metadata({key: value, "enabled": True, "count": 3}))
+        query = store.client.command.call_args.args[0]
+        parameters = store.client.command.call_args.kwargs["parameters"]
+        self.assertNotIn(key, query)
+        self.assertNotIn(value, query)
+        self.assertEqual(parameters["meta_key_0"], key)
+        self.assertEqual(parameters["meta_val_0"], value)
+        self.assertIs(parameters["meta_val_1"], True)
+        self.assertEqual(parameters["meta_val_2"], 3.0)
+        store.client.reset_mock()
+        self.assertFalse(store.delete_by_metadata({}))
+        store.client.command.assert_not_called()
+
     @classmethod
     def setUpClass(cls):
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
