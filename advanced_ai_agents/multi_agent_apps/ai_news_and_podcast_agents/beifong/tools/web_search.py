@@ -3,7 +3,7 @@ import asyncio
 from typing import List
 from pydantic import BaseModel, Field
 from browser_use import Agent as BrowserAgent, Controller, BrowserSession, BrowserProfile
-from langchain_openai import ChatOpenAI
+from browser_use import ChatOpenAI
 from dotenv import load_dotenv
 from agno.agent import Agent
 
@@ -67,15 +67,7 @@ def run_browser_search(agent: Agent, instruction: str) -> str:
             controller=controller,
             max_actions_per_step=MAX_ACTIONS_PER_STEP,
         )
-        try:
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            history = loop.run_until_complete(browser_agent.run(max_steps=MAX_STEPS))
-        except RuntimeError:
-            history = asyncio.run(browser_agent.run(max_steps=MAX_STEPS))
+        history = asyncio.run(browser_agent.run(max_steps=MAX_STEPS))
         result = history.final_result()
         if result:
             parsed: WebSearchResults = WebSearchResults.model_validate_json(result)
