@@ -1,13 +1,13 @@
-from langchain import hub
-from langchain.output_parsers import PydanticOutputParser
+from langchain_classic import hub
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.output_parsers import StrOutputParser
-from langchain.schema import Document
+from langchain_core.documents import Document
 from pydantic import BaseModel, Field
 import streamlit as st
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, WebBaseLoader
 from langchain_community.tools import TavilySearchResults
-from langchain_community.vectorstores import Qdrant
+from langchain_qdrant import QdrantVectorStore
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.messages import HumanMessage        
 from langgraph.graph import END, StateGraph
@@ -211,10 +211,10 @@ if docs:
     )
 
     # Create vectorstore
-    vectorstore = Qdrant(
+    vectorstore = QdrantVectorStore(
         client=client,
         collection_name=collection_name,
-        embeddings=embeddings,
+        embedding=embeddings,
     )
 
     # Add documents to the vectorstore
