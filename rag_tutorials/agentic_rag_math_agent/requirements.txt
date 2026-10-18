@@ -8,7 +8,7 @@ qdrant-client==1.14.1
 dspy==2.6.18
 faiss-cpu==1.10.0
 tavily-python==0.5.4
-python-dotenv==1.1.0
+python-dotenv==1.2.2
 streamlit==1.44.1
 pandas==2.2.3
-requests==2.32.3
+requests==2.33.0
