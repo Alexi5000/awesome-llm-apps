@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // First check if the plan exists
     const tripPlan = await prisma.tripPlan.findUnique({
@@ -119,7 +119,7 @@ export async function POST(
     // Ensure we update the status to failed if there's an error
     try {
       await prisma.tripPlanStatus.update({
-        where: { tripPlanId: params.id },
+        where: { tripPlanId: (await params).id },
         data: {
           status: 'failed',
           currentStep: 'Error occurred while retrying',
