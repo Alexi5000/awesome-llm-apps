@@ -8,7 +8,7 @@ from unittest.mock import patch
 from langchain_core.documents import Document
 from langchain_core.embeddings import DeterministicFakeEmbedding
 from langchain_core.language_models.fake import FakeListLLM
-from langchain_community.vectorstores import Qdrant
+from langchain_qdrant import QdrantVectorStore as Qdrant
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 from streamlit.testing.v1 import AppTest
@@ -28,7 +28,7 @@ class RuntimeTests(unittest.TestCase):
     def test_real_vector_store_retrieval_and_chain(self):
         client = QdrantClient(':memory:')
         client.create_collection('products', vectors_config=VectorParams(size=8, distance=Distance.COSINE))
-        store = Qdrant(client, 'products', embeddings=DeterministicFakeEmbedding(size=8))
+        store = Qdrant(client, 'products', embedding=DeterministicFakeEmbedding(size=8))
         store.add_documents([Document(page_content='Widget price is $20', metadata={'source': 'offline'})])
         state = SimpleNamespace(llm=FakeListLLM(responses=['The widget costs $20.']))
         with patch.object(app.st, 'session_state', state):
