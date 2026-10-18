@@ -1,4 +1,5 @@
 streamlit 
 openai
-mem0ai==0.1.29
+mem0ai==2.2.1
 litellm
+ollama

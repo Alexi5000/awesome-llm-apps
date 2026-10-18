@@ -15,6 +15,8 @@ if openai_api_key and anthropic_api_key:
 
     # Initialize Mem0 with Qdrant
     config = {
+        "llm": {"provider": "openai", "config": {"api_key": openai_api_key}},
+        "embedder": {"provider": "openai", "config": {"api_key": openai_api_key}},
         "vector_store": {
             "provider": "qdrant",
             "config": {
@@ -31,24 +33,11 @@ if openai_api_key and anthropic_api_key:
 
     if llm_choice == 'OpenAI GPT-4o':
         client = OpenAI(api_key=openai_api_key)
-    elif llm_choice == 'Claude Sonnet 3.5':
-        config = {
-            "llm": {
-                "provider": "litellm",
-                "config": {
-                    "model": "claude-3-5-sonnet-20240620",
-                    "temperature": 0.5,
-                    "max_tokens": 2000,
-                }
-            }
-        }
-        client = Memory.from_config(config)
-
     prompt = st.text_input("Ask the LLM")
 
     if st.button('Chat with LLM'):
         with st.spinner('Searching...'):
-            relevant_memories = memory.search(query=prompt, user_id=user_id)
+            relevant_memories = memory.search(query=prompt, filters={"user_id": user_id})
             context = "Relevant past information:\n"
             if relevant_memories and "results" in relevant_memories:
                 for mem in relevant_memories["results"]:
@@ -80,7 +69,7 @@ if openai_api_key and anthropic_api_key:
     # Sidebar option to show memory
     st.sidebar.title("Memory Info")
     if st.button("View My Memory"):
-            memories = memory.get_all(user_id=user_id)
+            memories = memory.get_all(filters={"user_id": user_id})
             if memories and "results" in memories:
                 st.write(f"Memory history for **{user_id}**:")
                 for mem in memories["results"]:
