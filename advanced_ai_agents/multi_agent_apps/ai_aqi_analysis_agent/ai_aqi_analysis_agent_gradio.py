@@ -68,16 +68,7 @@ class AQIAnalyzer:
             return aqi_response.data, info_msg
             
         except Exception as e:
-            error_msg = f"Error fetching AQI data: {str(e)}"
-            return {
-                'aqi': 0,
-                'temperature': 0,
-                'humidity': 0,
-                'wind_speed': 0,
-                'pm25': 0,
-                'pm10': 0,
-                'co': 0
-            }, error_msg
+            raise ValueError(f"Error fetching AQI data: {e}") from e
 
 class HealthRecommendationAgent:
     
