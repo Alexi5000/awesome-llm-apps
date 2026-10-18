@@ -1,0 +1,107 @@
+import asyncio
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+import sys
+import threading
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import aiohttp
+from bs4 import BeautifulSoup
+from fastapi import FastAPI, File, UploadFile
+from fastapi.testclient import TestClient
+import httpx
+import jwt
+from lxml_html_clean import Cleaner
+from nltk.tokenize import wordpunct_tokenize
+from redis import Redis
+
+from utils.crawl_url import get_web_data
+from utils.rss_feed_parser import get_feed_data
+
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/feed":
+            body = b'<rss version="2.0"><channel><title>News</title><item><title>Local story</title><link>https://example.com/story</link><guid isPermaLink="false">story-1</guid></item></channel></rss>'
+            content_type = "application/rss+xml"
+        else:
+            body = b'<html><head><title>Local story</title><meta name="description" content="Verified metadata"></head><body><article>News content</article></body></html>'
+            content_type = "text/html"
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+
+class DependencyRuntimeTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+        cls.url = f"http://127.0.0.1:{cls.server.server_port}"
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.thread.join()
+        cls.server.server_close()
+
+    def test_actual_web_extractor(self):
+        result = get_web_data(self.url)
+        self.assertEqual(result["metadata"]["title"], "Local story")
+        self.assertEqual(result["metadata"]["description"], "Verified metadata")
+        self.assertIn("News content", result["raw_html"])
+        soup = BeautifulSoup(result["raw_html"], "html.parser")
+        self.assertEqual(soup.select_one("body > article").text, "News content")
+
+    def test_actual_feed_parser(self):
+        result = get_feed_data(self.url + "/feed")
+        self.assertTrue(result["is_rss_feed"])
+        self.assertEqual(result["parsed_entries"][0]["entry_id"], "story-1")
+
+    def test_async_http_stack(self):
+        async def request():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.url) as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertIn("News content", await response.text())
+            async with httpx.AsyncClient(http2=True) as client:
+                response = await client.get(self.url)
+                self.assertEqual(response.status_code, 200)
+        asyncio.run(request())
+
+    def test_multipart_upload(self):
+        app = FastAPI()
+        @app.post("/upload")
+        async def upload(file: UploadFile = File()):
+            return {"name": file.filename, "body": (await file.read()).decode()}
+        with TestClient(app) as client:
+            response = client.post("/upload", files={"file": ("article.md", b"News content")})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"name": "article.md", "body": "News content"})
+
+    def test_text_cleaning_and_tokenization(self):
+        cleaned = Cleaner().clean_html('<div><script>alert(1)</script><p>News content.</p></div>')
+        self.assertNotIn("script", cleaned)
+        self.assertEqual(wordpunct_tokenize("News content."), ["News", "content", "."])
+
+    def test_redis_and_jwt_compatibility(self):
+        key = "local-test-key-with-at-least-32-bytes"
+        token = jwt.encode({"sub": "reader"}, key, algorithm="HS256")
+        self.assertEqual(jwt.decode(token, key, algorithms=["HS256"])["sub"], "reader")
+        with self.assertRaises(jwt.InvalidSignatureError):
+            jwt.decode(token, key + "wrong", algorithms=["HS256"])
+        client = Redis.from_url("redis://localhost:6379/2")
+        self.assertEqual(client.connection_pool.connection_kwargs["db"], 2)
+        client.close()
+
+
+if __name__ == "__main__":
+    unittest.main()
