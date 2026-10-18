@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 const require = createRequire(import.meta.url);
@@ -62,4 +65,42 @@ test('Nested CSS and Tailwind arbitrary/group variants compile through parser7',
 test('Selector parser rejects excessive pseudo nesting', () => {
   const deep = ':is('.repeat(2000) + '.x' + ')'.repeat(2000);
   assert.throws(() => parser().processSync(deep), /depth|nesting/i);
+});
+
+
+test('Tailwind consumers use the verified braces backport and retain glob matching', async () => {
+  execFileSync(process.execPath, ['scripts/verify-braces.cjs'], { cwd: new URL('..', import.meta.url), timeout: 10000 });
+  const tailwindRequire = createRequire(require.resolve('tailwindcss'));
+  const glob = tailwindRequire('fast-glob');
+  const matcher = createRequire(tailwindRequire.resolve('fast-glob'))('micromatch');
+  const directory = mkdtempSync(path.join(tmpdir(), 'negotiation-braces-'));
+  try {
+    mkdirSync(path.join(directory, 'components'));
+    writeFileSync(path.join(directory, 'components', 'lesson.tsx'), '<div class="text-purple-500"/>');
+    writeFileSync(path.join(directory, 'components', 'panel.jsx'), '<div class="font-bold"/>');
+    writeFileSync(path.join(directory, 'components', 'ignored.md'), 'ignore');
+    assert.deepEqual(glob.sync('components/*.{tsx,jsx}', { cwd: directory }).sort(), ['components/lesson.tsx', 'components/panel.jsx']);
+    assert.deepEqual(matcher(['lesson.tsx', 'panel.jsx', 'ignored.md'], '*.{tsx,jsx}'), ['lesson.tsx', 'panel.jsx']);
+    const result = await postcss([tailwindcss({
+      content: [path.join(directory, 'components', '*.{tsx,jsx}')],
+      corePlugins: { preflight: false },
+    })]).process('@tailwind utilities;', { from: undefined });
+    assert.match(result.css, /\.text-purple-500/);
+    assert.match(result.css, /\.font-bold/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('real micromatch and fast-glob consumers reject excessive brace recursion promptly', () => {
+  execFileSync(process.execPath, ['-e', `
+    const assert = require('node:assert/strict');
+    const { createRequire } = require('node:module');
+    const load = createRequire(require.resolve('tailwindcss'));
+    const glob = load('fast-glob');
+    const matcher = createRequire(load.resolve('fast-glob'))('micromatch');
+    const deep = '{'.repeat(4000) + 'a,b' + '}'.repeat(4000);
+    assert.throws(() => matcher.braces(deep), /depth/i);
+    assert.throws(() => glob.generateTasks(deep), /depth/i);
+  `], { cwd: new URL('..', import.meta.url), timeout: 5000 });
 });

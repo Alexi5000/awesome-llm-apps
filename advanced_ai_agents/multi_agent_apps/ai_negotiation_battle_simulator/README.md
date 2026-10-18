@@ -214,3 +214,9 @@ Feel free to add:
 ---
 
 *May the best negotiator win!* 🏆
+
+## Frontend dependency security
+
+The Tailwind file-scanning toolchain uses a maintained local braces3.0.3 backport for [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), which limits excessive nesting and guards cyclic parent traversal. The production build verifies installed source integrity and recursion behavior; frontend tests cover actual Tailwind scanning, fast-glob and micromatch consumers. See [backport provenance and maintenance](frontend/vendor/braces/BACKPORT.md).
+
+There is no patched upstream release. Package name/version remain unchanged, so raw npm audit still reports five high entries across braces and its dependency chain. This source mitigation does not suppress or dismiss the advisory and is not a zero-audit claim.
