@@ -3,22 +3,22 @@ from typing import List, Dict, Any, Literal, Optional
 from dataclasses import dataclass
 import streamlit as st
 from langchain_core.documents import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.vectorstores import Qdrant
+from langchain_qdrant import QdrantVectorStore as Qdrant
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 import tempfile
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from langchain.schema import HumanMessage
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_retrieval_chain
-from langchain import hub
-from langgraph.prebuilt import create_react_agent
+from langchain_core.messages import HumanMessage
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains import create_retrieval_chain
+from langchain_classic import hub
+from langchain.agents import create_agent
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.language_models import BaseLanguageModel
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 
@@ -100,7 +100,7 @@ def initialize_models():
                 st.session_state.databases[db_type] = Qdrant(
                     client=client,
                     collection_name=config.collection_name,
-                    embeddings=st.session_state.embeddings
+                    embedding=st.session_state.embeddings
                 )
             
             return True
@@ -218,7 +218,7 @@ def create_fallback_agent(chat_model: BaseLanguageModel):
 
     tools = [web_research]
     
-    agent = create_react_agent(model=chat_model,
+    agent = create_agent(model=chat_model,
                              tools=tools,
                              debug=False)
     
