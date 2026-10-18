@@ -44,6 +44,20 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn('42.0', run.call_args.args[0])
         self.assertEqual(extract.call_args.kwargs['urls'], ['https://www.aqi.in/dashboard/united-states/new-york/*'])
 
+    def test_failed_fetch_never_fabricates_clean_air_or_requests_advice(self):
+        failures = [RuntimeError('offline timeout'), {
+            'success': False, 'status': 'failed', 'expiresAt': '2099-01-01', 'data': {},
+        }, {'success': True, 'data': {}}]
+        for failure in failures:
+            with self.subTest(failure=type(failure).__name__):
+                behavior = {'side_effect': failure} if isinstance(failure, Exception) else {'return_value': failure}
+                with patch.object(app.FirecrawlApp, 'extract', **behavior), patch.object(app.Agent, 'run') as run:
+                    output = app.analyze_conditions('city', '', 'country', '', 'walk', 'offline-key', 'offline-key')
+                run.assert_not_called()
+                self.assertEqual(output[0], '')
+                self.assertEqual(output[1], 'Analysis failed')
+                self.assertIn('Error fetching AQI data', output[2])
+
     def test_provider_error_surfaces_as_failed_analysis(self):
         with patch.object(app.Agent, 'run', side_effect=RuntimeError('offline failure')), patch.object(
             app.AQIAnalyzer, 'fetch_aqi_data', return_value=(dict(aqi=42, temperature=20, humidity=50, wind_speed=4, pm25=5, pm10=8, co=2), 'status')
