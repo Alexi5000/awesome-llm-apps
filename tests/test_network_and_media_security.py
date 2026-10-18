@@ -36,6 +36,18 @@ def response(status=200, body=b"<p>Public article</p>", location=None):
 
 
 class PublicFetchTests(unittest.TestCase):
+    def setUp(self):
+        environment = patch.dict(fetch.os.environ, {"ALLOW_PRIVATE_URLS": "false"})
+        environment.start()
+        self.addCleanup(environment.stop)
+
+    def test_admin_private_network_opt_in_keeps_pinned_ingestion(self):
+        connection = Mock()
+        connection.getresponse.return_value = response()
+        with patch.dict(fetch.os.environ, {"ALLOW_PRIVATE_URLS": "true"}), patch.object(fetch.socket, "getaddrinfo", return_value=resolution("10.0.0.7")), patch.object(fetch, "_PinnedHTTPSConnection", return_value=connection) as factory:
+            self.assertIn("Public article", fetch.fetch_public_html("https://intranet.example/article"))
+        factory.assert_called_once_with("intranet.example", 443, "10.0.0.7")
+
     def test_rejects_nonpublic_dns_and_mixed_answers(self):
         for address in ["127.0.0.1", "10.0.0.1", "169.254.169.254", "100.64.0.1", "::1", "224.0.0.1", "0.0.0.0", "::ffff:127.0.0.1"]:
             with self.subTest(address=address), patch.object(fetch.socket, "getaddrinfo", return_value=resolution(address)):

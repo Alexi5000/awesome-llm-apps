@@ -116,7 +116,7 @@ VITE_API_URL=http://localhost:8897 npm run dev -- --port 5177
 ## Notes
 
 - Storage is in memory. Restarting the backend resets the demo index.
-- URL ingestion allows only public Internet addresses, pins each connection to its validated address, revalidates redirects, and limits pages to 2 MB. Private-network ingestion is not supported.
+- URL ingestion allows only public Internet addresses, pins each connection to its validated address, revalidates redirects, and limits pages to 2 MB. Administrators can explicitly set `ALLOW_PRIVATE_URLS=true` for trusted private-network ingestion; that mode intentionally permits private destinations and must not be exposed to untrusted users. Connection pinning, redirect validation, size limits and TLS verification still apply.
 - Media files uploaded through the Gemini File API are cleaned up after embedding.
 - Blocking media processing runs in a threadpool so the FastAPI event loop is not held.
 - For production, replace the in-memory store with durable storage and add authentication, background ingestion, evals, observability, and a managed vector database.

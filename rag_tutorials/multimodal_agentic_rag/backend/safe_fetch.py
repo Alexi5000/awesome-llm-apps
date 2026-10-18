@@ -2,6 +2,7 @@
 
 import http.client
 import ipaddress
+import os
 import socket
 import ssl
 from urllib.parse import urljoin, urlsplit
@@ -21,12 +22,13 @@ def _resolve_target(url):
     addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
     if not addresses:
         raise ValueError("URL host did not resolve.")
+    allow_private = os.getenv("ALLOW_PRIVATE_URLS", "").lower() == "true"
     for entry in addresses:
         address = ipaddress.ip_address(entry[4][0])
-        if not address.is_global or address.is_multicast or address.is_unspecified:
+        if address.is_multicast or address.is_unspecified or (not allow_private and not address.is_global):
             raise ValueError("Only public Internet addresses are allowed.")
         if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
-            if not address.ipv4_mapped.is_global:
+            if not allow_private and not address.ipv4_mapped.is_global:
                 raise ValueError("Only public Internet addresses are allowed.")
     return parsed, host, port, addresses[0][4][0]
 
