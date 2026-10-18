@@ -28,7 +28,7 @@ The **AI Health & Fitness Planner** is a personalized health and fitness Agent p
 The application requires the following Python libraries:
 
 - `agno`
-- `google-generativeai`
+- `google-genai` (the SDK used by Agno's Gemini adapter)
 - `streamlit`
 
 Ensure these dependencies are installed via the `requirements.txt` file according to their mentioned versions
