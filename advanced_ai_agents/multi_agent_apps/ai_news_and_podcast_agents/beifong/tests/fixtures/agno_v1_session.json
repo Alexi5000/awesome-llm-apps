@@ -1,0 +1,12 @@
+{
+  "session_id": "offline-session",
+  "user_id": null,
+  "memory": "{\"summaries\": {}, \"memories\": {}, \"runs\": [{\"content\": \"Old answer\", \"content_type\": \"str\", \"event\": \"RunResponse\", \"metrics\": {\"input_tokens\": [5], \"output_tokens\": [2], \"total_tokens\": [7], \"audio_tokens\": [0], \"input_audio_tokens\": [0], \"output_audio_tokens\": [0], \"cached_tokens\": [0], \"reasoning_tokens\": [0], \"prompt_tokens\": [5], \"completion_tokens\": [2], \"time\": [0.041531490001943894]}, \"model\": \"gpt-4o\", \"run_id\": \"1ee34d5d-17ff-4184-9219-703dfdc52dcc\", \"agent_id\": \"podcast-agent\", \"session_id\": \"offline-session\", \"tools\": [], \"created_at\": 1792340419, \"messages\": [{\"content\": \"Old question\", \"from_history\": false, \"stop_after_tool_call\": false, \"role\": \"user\", \"created_at\": 1792340426}, {\"content\": \"Old answer\", \"from_history\": false, \"stop_after_tool_call\": false, \"role\": \"assistant\", \"metrics\": {\"input_tokens\": 5, \"output_tokens\": 2, \"total_tokens\": 7, \"prompt_tokens\": 5, \"completion_tokens\": 2, \"time\": 0.041531490001943894}, \"created_at\": 1792340426}]}]}",
+  "session_data": "{\"session_state\": {\"stage\": \"source_selection\"}, \"session_metrics\": {\"input_tokens\": 0, \"output_tokens\": 0, \"total_tokens\": 0, \"audio_tokens\": 0, \"input_audio_tokens\": 0, \"output_audio_tokens\": 0, \"cached_tokens\": 0, \"reasoning_tokens\": 0, \"prompt_tokens\": 0, \"completion_tokens\": 0, \"prompt_tokens_details\": null, \"completion_tokens_details\": null, \"additional_metrics\": null, \"time\": null, \"time_to_first_token\": null, \"timer\": null}}",
+  "extra_data": "null",
+  "created_at": 1792340426,
+  "updated_at": null,
+  "agent_id": "podcast-agent",
+  "agent_data": "{\"agent_id\": \"podcast-agent\", \"model\": {\"name\": \"OpenAIChat\", \"id\": \"gpt-4o\", \"provider\": \"OpenAI\", \"response_format\": \"None\"}}",
+  "team_session_id": null
+}

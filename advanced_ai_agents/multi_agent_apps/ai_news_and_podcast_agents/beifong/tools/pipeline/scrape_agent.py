@@ -106,7 +106,7 @@ def verify_content_with_agent(query, search_results, use_agent=True):
                 description=SCRAPE_AGENT_DESCRIPTION,
                 use_json_mode=True,
                 session_id=session_id,
-                response_model=ScrapedContent,
+                output_schema=ScrapedContent,
             )
             response = scrape_agent.run(
                 f"Query: {query}\n"

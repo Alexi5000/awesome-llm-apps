@@ -64,7 +64,6 @@ def image_generation_agent_run(query: str, generated_script: Any) -> str:
             description=IMAGE_GENERATION_AGENT_DESCRIPTION,
             instructions=IMAGE_GENERATION_AGENT_INSTRUCTIONS,
             markdown=True,
-            show_tool_calls=True,
             session_id=session_id,
         )
         image_agent.run(f"query: {query},\n podcast script: {json.dumps(generated_script)}", session_id=session_id)

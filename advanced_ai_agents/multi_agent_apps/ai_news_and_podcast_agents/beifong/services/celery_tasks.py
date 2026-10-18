@@ -1,6 +1,6 @@
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from agno.storage.sqlite import SqliteStorage
+from db.podcast_storage import get_podcast_db
 import os
 from dotenv import load_dotenv
 from services.celery_app import app, SessionLockedTask
@@ -38,10 +38,10 @@ def agent_chat(self, session_id, message):
 
         _agent = Agent(
             model=OpenAIChat(id=AGENT_MODEL, api_key=os.getenv("OPENAI_API_KEY")),
-            storage=SqliteStorage(table_name="podcast_sessions", db_file=db_file),
-            add_history_to_messages=True,
+            db=get_podcast_db(db_file),
+            add_history_to_context=True,
             read_chat_history=True,
-            add_state_in_messages=True,
+            add_session_state_to_context=True,
             num_history_runs=30,
             instructions=AGENT_INSTRUCTIONS,
             description=AGENT_DESCRIPTION,
@@ -63,7 +63,6 @@ def agent_chat(self, session_id, message):
         )
         response = _agent.run(message, session_id=session_id)
         print(f"Response generated for session {session_id}")
-        _agent.write_to_storage(session_id=session_id)
         session_state = SessionService.get_session(session_id).get("state", INITIAL_SESSION_STATE)
         return {
             "session_id": session_id,

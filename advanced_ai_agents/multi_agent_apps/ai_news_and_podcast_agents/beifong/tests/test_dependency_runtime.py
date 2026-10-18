@@ -69,21 +69,98 @@ class DependencyRuntimeTests(unittest.TestCase):
         self.assertEqual(tool.model_dump()["inputSchema"]["properties"]["query"]["type"], "string")
 
     def test_existing_agno_session_schema_remains_readable(self):
-        import tempfile
+        import json
         import sqlite3
+        import tempfile
         from agno.agent import Agent
         from agno.models.openai import OpenAIChat
-        from agno.storage.sqlite import SqliteStorage
+        from db.podcast_storage import get_podcast_db
+        requests = []
+        def respond(request):
+            requests.append(json.loads(request.content))
+            return httpx.Response(200, json={"id": "offline-run", "object": "chat.completion", "created": 1,
+                "model": "gpt-4o", "choices": [{"index": 0, "finish_reason": "stop",
+                "message": {"role": "assistant", "content": "New answer"}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12}})
         with tempfile.TemporaryDirectory() as directory:
             filename = str(Path(directory) / "sessions.db")
-            agent = Agent(model=OpenAIChat(id="gpt-4o", api_key="offline-key"),
-                storage=SqliteStorage(table_name="podcast_sessions", db_file=filename),
-                session_id="offline-session", session_state={"stage": "source_selection"})
-            agent.write_to_storage(session_id="offline-session")
+            memory = {"runs": [{"run_id": "old-run", "agent_id": "podcast-agent", "session_id": "offline-session",
+                "content": "Old answer", "messages": [{"role": "user", "content": "Old question"},
+                {"role": "assistant", "content": "Old answer"}], "created_at": 1}]}
+            with sqlite3.connect(filename) as connection:
+                connection.execute("CREATE TABLE podcast_sessions (session_id TEXT PRIMARY KEY, agent_id TEXT, memory TEXT, session_data TEXT, created_at INTEGER, updated_at INTEGER)")
+                connection.execute("INSERT INTO podcast_sessions VALUES (?, ?, ?, ?, ?, ?)",
+                    ("offline-session", "podcast-agent", json.dumps(memory), json.dumps({"session_state": {"stage": "source_selection"}}), 1, 2))
+                connection.execute("INSERT INTO podcast_sessions VALUES (?, ?, ?, ?, ?, ?)",
+                    ("empty-session", "podcast-agent", '{"runs": []}', '{}', 1, 2))
+            db = get_podcast_db(filename)
+            with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+                agent = Agent(id="podcast-agent", model=OpenAIChat(id="gpt-4o", api_key="offline-key", http_client=client),
+                    db=db, session_id="offline-session", add_history_to_context=True, telemetry=False)
+                result = agent.run("New question")
+            self.assertEqual(result.content, "New answer")
+            self.assertTrue(any(message.get("content") == "Old question" for message in requests[0]["messages"]))
+            self.assertTrue(any(message.get("content") == "Old answer" for message in requests[0]["messages"]))
+            get_podcast_db(filename)
             with sqlite3.connect(filename) as connection:
                 row = connection.execute("SELECT memory, session_data FROM podcast_sessions WHERE session_id = ?", ("offline-session",)).fetchone()
-            self.assertIsNotNone(row)
-            self.assertIn("source_selection", row[1])
+                backup = connection.execute("SELECT memory FROM podcast_sessions_v1_backup WHERE session_id = ?", ("offline-session",)).fetchone()
+                self.assertEqual(json.loads(backup[0]), memory)
+                self.assertEqual(len(json.loads(row[0])["runs"]), 2)
+                self.assertEqual(json.loads(row[1])["session_state"]["stage"], "source_selection")
+                connection.execute("DELETE FROM podcast_sessions WHERE session_id = ?", ("offline-session",))
+                connection.commit()
+            get_podcast_db(filename)
+            with sqlite3.connect(filename) as connection:
+                self.assertEqual(connection.execute("SELECT COUNT(*) FROM podcast_sessions WHERE session_id = ?", ("offline-session",)).fetchone()[0], 0)
+
+    def test_actual_agno_v1_fixture_preserves_history_and_metrics(self):
+        import json
+        import sqlite3
+        import tempfile
+        from agno.db.base import SessionType
+        from db.podcast_storage import get_podcast_db
+        source = json.loads((Path(__file__).parent / "fixtures" / "agno_v1_session.json").read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            filename = str(Path(directory) / "sessions.db")
+            with sqlite3.connect(filename) as connection:
+                columns = ", ".join('"' + key + '"' for key in source)
+                connection.execute("CREATE TABLE podcast_sessions (" + columns + ")")
+                connection.execute("INSERT INTO podcast_sessions VALUES (" + ",".join("?" for _ in source) + ")", tuple(source.values()))
+            session = get_podcast_db(filename).get_session("offline-session", SessionType.AGENT)
+            self.assertEqual(len(session.runs), 1)
+            self.assertEqual(session.runs[0].content, "Old answer")
+            self.assertEqual(session.session_data["session_state"]["stage"], "source_selection")
+            self.assertEqual([m.content for m in session.runs[0].messages if m.role == "user"], ["Old question"])
+
+    def test_invalid_legacy_session_aborts_without_replacing_original(self):
+        import sqlite3
+        import tempfile
+        from db.podcast_storage import get_podcast_db
+        with tempfile.TemporaryDirectory() as directory:
+            filename = str(Path(directory) / "sessions.db")
+            with sqlite3.connect(filename) as connection:
+                connection.execute("CREATE TABLE podcast_sessions (session_id TEXT PRIMARY KEY, memory TEXT)")
+                connection.execute("INSERT INTO podcast_sessions VALUES ('bad', 'invalid JSON')")
+            with self.assertRaises(ValueError):
+                get_podcast_db(filename)
+            with sqlite3.connect(filename) as connection:
+                self.assertEqual(connection.execute("SELECT type FROM sqlite_master WHERE name='podcast_sessions'").fetchone()[0], "table")
+                self.assertEqual(connection.execute("SELECT memory FROM podcast_sessions").fetchone()[0], "invalid JSON")
+
+    def test_agent_constructor_arguments_match_supported_api(self):
+        import ast
+        import inspect
+        from agno.agent import Agent
+        parameters = inspect.signature(Agent).parameters
+        root = Path(__file__).resolve().parents[1]
+        for folder in (root / "agents", root / "tools", root / "services"):
+            for source in folder.rglob("*.py"):
+                for node in ast.walk(ast.parse(source.read_text())):
+                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "Agent":
+                        for keyword in node.keywords:
+                            if keyword.arg:
+                                self.assertIn(keyword.arg, parameters, f"{source}: unsupported {keyword.arg}")
 
     def test_browser_search_preserves_structured_results(self):
         import os
