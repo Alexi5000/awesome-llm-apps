@@ -1,0 +1,29 @@
+name: Gemini and Deepseek RAG runtime
+on:
+  pull_request:
+    paths:
+      - 'rag_tutorials/gemini_agentic_rag/**'
+      - 'rag_tutorials/deepseek_local_rag_agent/**'
+      - 'rag_tutorials/tests/test_loader_runtime.py'
+      - '.github/workflows/rag-loaders-runtime.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'rag_tutorials/gemini_agentic_rag/**'
+      - 'rag_tutorials/deepseek_local_rag_agent/**'
+      - 'rag_tutorials/tests/test_loader_runtime.py'
+      - '.github/workflows/rag-loaders-runtime.yml'
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r rag_tutorials/gemini_agentic_rag/requirements.txt -r rag_tutorials/deepseek_local_rag_agent/requirements.txt
+      - run: python -m pip check
+      - run: python -m unittest discover -s rag_tutorials/tests -p test_loader_runtime.py -v

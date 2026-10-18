@@ -7,13 +7,13 @@ import bs4
 from agno.agent import Agent
 from agno.models.ollama import Ollama
 from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 from langchain_core.embeddings import Embeddings
 from agno.tools.exa import ExaTools
-from agno.embedder.ollama import OllamaEmbedder
+from agno.knowledge.embedder.ollama import OllamaEmbedder
 
 
 class OllamaEmbedderr(Embeddings):
@@ -169,6 +169,7 @@ def process_pdf(file) -> List:
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             tmp_file.write(file.getvalue())
+            tmp_file.flush()
             loader = PyPDFLoader(tmp_file.name)
             documents = loader.load()
             
@@ -271,7 +272,6 @@ def get_web_search_agent() -> Agent:
         2. Compile and summarize the most relevant information
         3. Include sources in your response
         """,
-        show_tool_calls=True,
         markdown=True,
     )
 
@@ -296,7 +296,6 @@ def get_rag_agent() -> Agent:
         
         Always maintain high accuracy and clarity in your responses.
         """,
-        show_tool_calls=True,
         markdown=True,
     )
 
