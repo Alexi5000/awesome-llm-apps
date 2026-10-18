@@ -1,10 +1,6 @@
-import ipaddress
 import os
-import socket
 from typing import Any, Literal, Optional
-from urllib.parse import urlparse
 
-import httpx
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +9,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from starlette.concurrency import run_in_threadpool
 
 from app_state import RAG_STORE
+from safe_fetch import fetch_public_html
 
 SETUP_ERROR = ""
 
@@ -74,28 +71,6 @@ def _extract_text_from_html(html: str) -> str:
     for tag in soup(["script", "style", "nav", "footer", "header"]):
         tag.decompose()
     return " ".join(soup.get_text(" ").split())
-
-
-def _validate_fetch_url(url: str) -> None:
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-        raise ValueError("Only HTTP and HTTPS URLs are supported.")
-
-    if os.getenv("ALLOW_PRIVATE_URLS", "").lower() == "true":
-        return
-
-    if parsed.hostname.lower() == "localhost":
-        raise ValueError("Private and localhost URLs are disabled for URL ingestion.")
-
-    try:
-        address_info = socket.getaddrinfo(parsed.hostname, None)
-    except socket.gaierror as exc:
-        raise ValueError(f"Could not resolve URL host: {parsed.hostname}") from exc
-
-    for item in address_info:
-        address = ipaddress.ip_address(item[4][0])
-        if address.is_private or address.is_loopback or address.is_link_local or address.is_reserved:
-            raise ValueError("Private and localhost URLs are disabled for URL ingestion.")
 
 
 def _event_text(event: Any) -> str:
@@ -165,11 +140,8 @@ async def add_text_source(req: TextSourceRequest):
 async def add_url_source(req: UrlSourceRequest):
     try:
         url = str(req.url)
-        await run_in_threadpool(_validate_fetch_url, url)
-        async with httpx.AsyncClient(timeout=20, follow_redirects=True) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-        text = _extract_text_from_html(response.text)
+        html = await run_in_threadpool(fetch_public_html, url)
+        text = _extract_text_from_html(html)
         title = req.title or url.replace("https://", "").replace("http://", "")[:80]
         source = await run_in_threadpool(RAG_STORE.add_text_source, title, text[:12000], "url")
         snapshot = await run_in_threadpool(RAG_STORE.snapshot)
