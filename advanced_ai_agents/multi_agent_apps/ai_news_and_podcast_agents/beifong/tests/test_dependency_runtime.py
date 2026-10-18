@@ -56,6 +56,36 @@ class DependencyRuntimeTests(unittest.TestCase):
         cls.thread.join()
         cls.server.server_close()
 
+    def test_embedding_and_audio_transformer_compatibility(self):
+        import torch
+        from sentence_transformers import SentenceTransformer, models
+        from transformers import AlbertConfig
+        from kokoro.modules import CustomAlbert
+        embedding = SentenceTransformer(modules=[models.BoW(["news", "audio", "story"])])
+        vectors = embedding.encode(["news story", "audio"])
+        self.assertEqual(vectors.shape, (2, 3))
+        self.assertGreater(float(vectors[0].sum()), 0)
+        model = CustomAlbert(AlbertConfig(vocab_size=32, embedding_size=8,
+            hidden_size=16, num_hidden_layers=1, num_attention_heads=2,
+            intermediate_size=24))
+        with torch.no_grad():
+            output = model(torch.tensor([[1, 2, 3]]))
+        self.assertEqual(tuple(output.shape), (1, 3, 16))
+        self.assertTrue(torch.isfinite(output).all())
+
+    def test_safe_tensor_checkpoint_roundtrip(self):
+        import torch
+        import pickle
+        checkpoint = BytesIO()
+        torch.save({"embedding": torch.tensor([1.0, 2.0])}, checkpoint)
+        checkpoint.seek(0)
+        self.assertEqual(torch.load(checkpoint, weights_only=True)["embedding"].tolist(), [1.0, 2.0])
+        unsafe = BytesIO()
+        torch.save({"callable": eval}, unsafe)
+        unsafe.seek(0)
+        with self.assertRaises(pickle.UnpicklingError):
+            torch.load(unsafe, weights_only=True)
+
     def test_actual_web_extractor(self):
         result = get_web_data(self.url)
         self.assertEqual(result["metadata"]["title"], "Local story")
