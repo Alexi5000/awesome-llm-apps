@@ -55,7 +55,7 @@ duckduckgo_search==8.0.1
 elevenlabs==1.57.0
 espeakng-loader==0.2.4
 faiss-cpu==1.9.0.post1
-fastapi==0.115.12
+fastapi==0.146.0
 feedparser==6.0.11
 filelock==3.20.3
 filetype==1.2.0
@@ -115,8 +115,8 @@ librosa==0.11.0
 linkify-it-py==2.0.3
 llvmlite==0.44.0
 loguru==0.7.3
-lxml==6.1.0
-lxml_html_clean==0.4.4
+lxml==6.1.1
+lxml_html_clean==0.4.5
 marisa-trie==1.2.1
 markdown-it-py==3.0.0
 markdownify==1.1.0
@@ -206,7 +206,7 @@ spacy-legacy==3.0.12
 spacy-loggers==1.0.5
 SQLAlchemy==2.0.40
 srsly==2.5.1
-starlette==0.46.2
+starlette==1.9.0
 sympy==1.14.0
 tabulate==0.9.0
 tenacity==9.1.2
