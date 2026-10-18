@@ -107,6 +107,7 @@ def process_pdf(file) -> List:
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             tmp_file.write(file.getvalue())
+            tmp_file.flush()
             loader = PyPDFLoader(tmp_file.name)
             documents = loader.load()
             
