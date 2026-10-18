@@ -20,10 +20,10 @@ This script demonstrates how to build a voice-enabled Retrieval-Augmented Genera
 1. Clone the GitHub repository
 ```bash
 git clone https://github.com/Shubhamsaboo/awesome-llm-apps.git
-cd awesome-llm-apps/rag_tutorials/voice_rag_openaisdk
+cd awesome-llm-apps/voice_ai_agents/voice_rag_openaisdk
 ```
 
-2. Install the required dependencies:
+2. Use Python 3.12 and install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ```
@@ -69,3 +69,7 @@ streamlit run rag_voice.py
    - Document source tracking
    - Download capability for audio responses
    - Progress tracking for document processing
+
+### Offline compatibility checks
+
+Run `python -m unittest discover -s tests -v`. Tests cover real PDF parsing, local Qdrant storage/retrieval, agent construction, OpenAI audio request serialization, empty retrieval, and initial UI rendering. Model inference and physical audio playback are mocked; live credentials, embedding model downloads and a working audio device are still required for the complete voice workflow. Linux local playback may require the system PortAudio library.

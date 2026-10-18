@@ -53,7 +53,10 @@ To run the app with Streamlit:
 
 ```bash
 streamlit run app/streamlit.py
+```
 
+## Dependency and runtime validation
 
+Use Python 3.12 and install `requirements.txt`. Run `python -m unittest discover -s tests -v` for real DSPy signature/prediction tests, persistent local LlamaIndex/Qdrant retrieval, KB/web routing, and Streamlit startup. Paid provider responses are mocked; production API access and Qdrant connectivity are not established by these offline tests.
 
-
+The installed-environment audit still reports unpatched diskcache 5.6.3 (PYSEC-2026-2447) and NLTK 3.10.3 (PYSEC-2026-3740). These dependencies remain visible; no advisories are suppressed.
