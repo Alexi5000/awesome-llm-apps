@@ -215,7 +215,7 @@ class PodcastAgentService:
                 async with conn.execute(
                     """
                     select name from sqlite_master
-                    where type='table' and name='podcast_sessions'
+                    where type IN ('table', 'view') and name='podcast_sessions'
                     """
                 ) as cursor:
                     table = await cursor.fetchone()
@@ -356,7 +356,7 @@ class PodcastAgentService:
                 async with conn.execute(
                     """
                     select name from sqlite_master
-                    where type='table' and name='podcast_sessions'
+                    where type IN ('table', 'view') and name='podcast_sessions'
                     """
                 ) as cursor:
                     table = await cursor.fetchone()

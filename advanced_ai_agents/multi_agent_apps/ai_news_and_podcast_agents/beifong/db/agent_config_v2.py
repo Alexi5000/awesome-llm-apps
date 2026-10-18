@@ -1,4 +1,4 @@
-from agno.storage.sqlite import SqliteStorage
+from db.podcast_storage import get_podcast_db
 from db.config import get_agent_session_db_path
 import json
 
@@ -166,4 +166,4 @@ INITIAL_SESSION_STATE = {
     "show_audio_for_confirmation": False,
 }
 
-STORAGE = SqliteStorage(table_name="podcast_sessions", db_file=get_agent_session_db_path())
+STORAGE = get_podcast_db(get_agent_session_db_path())

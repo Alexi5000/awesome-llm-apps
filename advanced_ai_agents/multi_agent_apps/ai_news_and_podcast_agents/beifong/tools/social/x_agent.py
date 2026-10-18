@@ -78,7 +78,7 @@ def analyze_posts_sentiment(posts_data):
         instructions=SENTIMENT_AGENT_INSTRUCTIONS,
         description=SENTIMENT_AGENT_DESCRIPTION,
         use_json_mode=True,
-        response_model=AnalysisResponse,
+        output_schema=AnalysisResponse,
         session_id=session_id,
     )
     posts_prompt = "Analyze the sentiment and categorize the following social media posts:\n\n"

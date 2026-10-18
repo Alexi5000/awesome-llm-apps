@@ -102,7 +102,7 @@ def script_agent_run(
             instructions=PODCAST_AGENT_INSTRUCTIONS,
             description=PODCAST_AGENT_DESCRIPTION,
             use_json_mode=True,
-            response_model=PodcastScript,
+            output_schema=PodcastScript,
             session_id=session_id,
         )
         response = podcast_script_agent.run(

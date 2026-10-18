@@ -68,7 +68,7 @@ def search_agent_run(query: str) -> str:
             instructions=SEARCH_AGENT_INSTRUCTIONS,
             description=SEARCH_AGENT_DESCRIPTION,
             use_json_mode=True,
-            response_model=SearchResults,
+            output_schema=SearchResults,
             tools=[
                 google_news_discovery_run,
                 DuckDuckGoTools(),
