@@ -1,5 +1,6 @@
 import asyncio
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
 from pathlib import Path
 import sys
 import threading
@@ -15,6 +16,8 @@ import httpx
 import jwt
 from lxml_html_clean import Cleaner
 from nltk.tokenize import wordpunct_tokenize
+from PIL import Image
+from tools.browser_crawler import PlaywrightScraper
 from redis import Redis
 
 from utils.crawl_url import get_web_data
@@ -91,6 +94,29 @@ class DependencyRuntimeTests(unittest.TestCase):
         cleaned = Cleaner().clean_html('<div><script>alert(1)</script><p>News content.</p></div>')
         self.assertNotIn("script", cleaned)
         self.assertEqual(wordpunct_tokenize("News content."), ["News", "content", "."])
+
+    def test_newspaper_article_extraction(self):
+        result = PlaywrightScraper()._parse_with_newspaper(self.url, self.url)
+        self.assertTrue(result["success"], result)
+        self.assertEqual(result["title"], "Local story")
+
+    def test_image_decode_resize_and_encode(self):
+        source = Image.new("RGB", (40, 20), color=(12, 34, 56))
+        png = BytesIO()
+        source.save(png, format="PNG")
+        png.seek(0)
+        with Image.open(png) as image:
+            image.load()
+            self.assertEqual(image.size, (40, 20))
+            image.thumbnail((10, 10), Image.Resampling.LANCZOS)
+            self.assertEqual(image.size, (10, 5))
+            jpg = BytesIO()
+            image.save(jpg, format="JPEG")
+        jpg.seek(0)
+        with Image.open(jpg) as image:
+            image.load()
+            self.assertEqual(image.format, "JPEG")
+            self.assertEqual(image.size, (10, 5))
 
     def test_redis_and_jwt_compatibility(self):
         key = "local-test-key-with-at-least-32-bytes"
