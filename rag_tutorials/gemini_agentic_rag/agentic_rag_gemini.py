@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import List
 
 import streamlit as st
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import bs4
 from agno.agent import Agent
 from agno.models.google import Gemini
 from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
@@ -19,19 +20,21 @@ from agno.tools.exa import ExaTools
 
 class GeminiEmbedder(Embeddings):
     def __init__(self, model_name="models/text-embedding-004"):
-        genai.configure(api_key=st.session_state.google_api_key)
+        self.client = genai.Client(api_key=st.session_state.google_api_key)
         self.model = model_name
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         return [self.embed_query(text) for text in texts]
 
     def embed_query(self, text: str) -> List[float]:
-        response = genai.embed_content(
+        response = self.client.models.embed_content(
             model=self.model,
-            content=text,
-            task_type="retrieval_document"
+            contents=text,
+            config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
         )
-        return response['embedding']
+        if not response.embeddings or not response.embeddings[0].values:
+            raise ValueError("Google returned no embedding values")
+        return response.embeddings[0].values
 
 
 # Constants
@@ -137,6 +140,7 @@ def process_pdf(file) -> List:
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
             tmp_file.write(file.getvalue())
+            tmp_file.flush()
             loader = PyPDFLoader(tmp_file.name)
             documents = loader.load()
             
@@ -246,7 +250,6 @@ def get_query_rewriter_agent() -> Agent:
         User: "Tell me about transformers"
         Output: "Explain the architecture, mechanisms, and applications of Transformer neural networks in natural language processing and deep learning"
         """,
-        show_tool_calls=False,
         markdown=True,
     )
 
@@ -266,7 +269,6 @@ def get_web_search_agent() -> Agent:
         2. Compile and summarize the most relevant information
         3. Include sources in your response
         """,
-        show_tool_calls=True,
         markdown=True,
     )
 
@@ -288,7 +290,6 @@ def get_rag_agent() -> Agent:
         
         Always maintain high accuracy and clarity in your responses.
         """,
-        show_tool_calls=True,
         markdown=True,
     )
 
@@ -319,7 +320,6 @@ def check_document_relevance(query: str, vector_store, threshold: float = 0.7) -
 # Main Application Flow
 if st.session_state.google_api_key:
     os.environ["GOOGLE_API_KEY"] = st.session_state.google_api_key
-    genai.configure(api_key=st.session_state.google_api_key)
     
     qdrant_client = init_qdrant()
     
