@@ -1,6 +1,5 @@
-google-generativeai==0.8.3
-streamlit==1.41.1
-agno>=2.2.10
-Pillow==11.0.0
-duckduckgo-search==6.3.7
-
+streamlit==1.54.0
+Pillow==12.3.0
+agno>=2.3.24,<4
+google-genai>=1.18.0,<2
+ddgs>=9,<10
