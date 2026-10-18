@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import httpx
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -45,9 +47,19 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(app.route_query('quarterly revenue'), 'finance')
 
     def test_fallback_graph_constructs_with_current_chat_adapter(self):
-        model = app.ChatOpenAI(api_key='offline-key', model='gpt-4o')
-        graph = app.create_fallback_agent(model)
-        self.assertIn('agent', graph.get_graph().nodes)
+        def respond(request):
+            payload = json.loads(request.content)
+            self.assertEqual(payload['tools'][0]['function']['name'], 'web_research')
+            return httpx.Response(200, json={
+                'id': 'offline', 'object': 'chat.completion', 'created': 0,
+                'model': 'gpt-4o', 'choices': [{'index': 0, 'finish_reason': 'stop',
+                'message': {'role': 'assistant', 'content': 'Offline research answer'}}],
+                'usage': {'prompt_tokens': 1, 'completion_tokens': 1, 'total_tokens': 2}})
+        with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+            model = app.ChatOpenAI(api_key='offline-key', model='gpt-4o', http_client=client)
+            graph = app.create_fallback_agent(model)
+            result = graph.invoke({'messages': [('user', 'research a widget')]})
+        self.assertEqual(result['messages'][-1].content, 'Offline research answer')
 
 
 if __name__ == '__main__':
