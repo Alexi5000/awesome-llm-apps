@@ -3,8 +3,8 @@
 *Guided Responses Chatbot*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Electron](https://img.shields.io/badge/Electron-27+-blue.svg)](https://electronjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-22.12+-green.svg)](https://nodejs.org/)
+[![Electron](https://img.shields.io/badge/Electron-44-blue.svg)](https://electronjs.org/)
 [![Ollama](https://img.shields.io/badge/Ollama-Compatible-orange.svg)](https://ollama.ai/)
 
 > **Stop over-generating. Start thinking strategically.**
@@ -73,9 +73,14 @@ ThinkPath AI revolutionizes how you interact with language models by introducing
 ## 🛠 **Installation**
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Node.js](https://nodejs.org/) (v22.12 or higher)
+- macOS 13 or newer on Mac; Electron 44 no longer supports Windows 32-bit or Linux ARM 32-bit. See [Electron breaking changes](https://www.electronjs.org/docs/latest/breaking-changes#breaking-api-changes-440).
 - [Ollama](https://ollama.ai/) installed and running
 - At least one language model downloaded
+
+### Runtime verification
+
+Run `npm run test:runtime` to check window creation, renderer loading, IPC, and response fallback with a mocked Ollama response. No running model is required. On headless Linux, use `xvfb-run -a npm run test:runtime`. Electron downloads its binary on first launch, so that launch requires network access. The desktop smoke test does not validate packaged installers or real model output.
 
 ### Quick Start
 
