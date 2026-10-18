@@ -1,12 +1,9 @@
 import asyncio
 import streamlit as st
-from browser_use import Agent, SystemPrompt
-from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage
+from browser_use import Agent, ChatOpenAI, ChatAnthropic
 import re
 
-async def generate_meme(query: str, model_choice: str, api_key: str) -> None:
+async def generate_meme(query: str, model_choice: str, api_key: str) -> str | None:
     # Initialize the appropriate LLM based on user selection
     if model_choice == "Claude":
         llm = ChatAnthropic(
@@ -51,7 +48,7 @@ async def generate_meme(query: str, model_choice: str, api_key: str) -> None:
     history = await agent.run()
     
     # Extract final result from agent history
-    final_result = history.final_result()
+    final_result = history.final_result() or ""
     
     # Use regex to find the meme URL in the result
     url_match = re.search(r'https://imgflip\.com/i/(\w+)', final_result)

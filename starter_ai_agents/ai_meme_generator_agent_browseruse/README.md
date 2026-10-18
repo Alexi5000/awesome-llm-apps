@@ -45,9 +45,9 @@ API keys required:
     ```bash
     pip install -r requirements.txt
     ```
-    Install `playwright` if needed.
+    Install Chromium for Browser Use (Python 3.12 or newer):
     ```bash
-    python -m playwright install --with-deps
+    uvx browser-use install
     ```
 3. **Run the Streamlit app**:
     ```bash
