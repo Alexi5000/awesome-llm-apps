@@ -1,4 +1,4 @@
-from langchain_openai import ChatOpenAI
+from browser_use import ChatOpenAI
 from browser_use import Agent
 from dotenv import load_dotenv
 import asyncio

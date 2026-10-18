@@ -56,6 +56,59 @@ class DependencyRuntimeTests(unittest.TestCase):
         cls.thread.join()
         cls.server.server_close()
 
+    def test_browser_support_crypto_and_mcp_contract(self):
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.exceptions import InvalidSignature
+        from mcp.types import Tool
+        key = Ed25519PrivateKey.generate()
+        signature = key.sign(b"offline payload")
+        key.public_key().verify(signature, b"offline payload")
+        with self.assertRaises(InvalidSignature):
+            key.public_key().verify(signature, b"changed payload")
+        tool = Tool.model_validate({"name": "search", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}}}})
+        self.assertEqual(tool.model_dump()["inputSchema"]["properties"]["query"]["type"], "string")
+
+    def test_existing_agno_session_schema_remains_readable(self):
+        import tempfile
+        import sqlite3
+        from agno.agent import Agent
+        from agno.models.openai import OpenAIChat
+        from agno.storage.sqlite import SqliteStorage
+        with tempfile.TemporaryDirectory() as directory:
+            filename = str(Path(directory) / "sessions.db")
+            agent = Agent(model=OpenAIChat(id="gpt-4o", api_key="offline-key"),
+                storage=SqliteStorage(table_name="podcast_sessions", db_file=filename),
+                session_id="offline-session", session_state={"stage": "source_selection"})
+            agent.write_to_storage(session_id="offline-session")
+            with sqlite3.connect(filename) as connection:
+                row = connection.execute("SELECT memory, session_data FROM podcast_sessions WHERE session_id = ?", ("offline-session",)).fetchone()
+            self.assertIsNotNone(row)
+            self.assertIn("source_selection", row[1])
+
+    def test_browser_search_preserves_structured_results(self):
+        import os
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import AsyncMock, patch
+        with patch.dict(os.environ, {"ANONYMIZED_TELEMETRY": "false", "OPENAI_API_KEY": "offline-key"}):
+            from tools.web_search import run_browser_search, BrowserAgent
+            from browser_use.agent.views import AgentHistoryList
+            history = AgentHistoryList(history=[])
+            payload = '{"results":[{"title":"Local news","url":"https://example.com/news","content":"Verified article"}]}'
+            previous = os.getcwd()
+            with tempfile.TemporaryDirectory() as directory:
+                try:
+                    os.chdir(directory)
+                    with patch.object(BrowserAgent, 'run', new=AsyncMock(return_value=history)), patch.object(AgentHistoryList, 'final_result', return_value=payload):
+                        result = run_browser_search(SimpleNamespace(session_id="offline-session"), "Find local news")
+                    self.assertIn('Verified article', result)
+                    self.assertIn('"is_scrapping_required": false', result)
+                    with patch.object(BrowserAgent, 'run', new=AsyncMock(side_effect=ValueError("provider unavailable"))):
+                        failed = run_browser_search(SimpleNamespace(session_id="offline-session"), "Find local news")
+                    self.assertIn('Error running browser search: provider unavailable', failed)
+                finally:
+                    os.chdir(previous)
+
     def test_embedding_and_audio_transformer_compatibility(self):
         import torch
         from sentence_transformers import SentenceTransformer, models
