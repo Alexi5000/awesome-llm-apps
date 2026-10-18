@@ -1,0 +1,37 @@
+{
+  "source": "https://docs.composio.dev/api/tools/GOOGLEDOCS_CREATE_DOCUMENT",
+  "retrieved": "2026-10-18",
+  "input_parameters": {
+    "type": "object",
+    "title": "CreateDocumentRequest",
+    "required": [
+      "title"
+    ],
+    "properties": {
+      "text": {
+        "type": "string",
+        "title": "Text",
+        "examples": [
+          "This document outlines the key findings...",
+          "## Agenda\n1. Welcome\n2. Presentation\n3. Q&A",
+          "Start of the report."
+        ],
+        "description": "Optional initial text content to insert at the beginning of the new document. If not provided, an empty document will be created. For very large text (over 50,000 characters), the text will be inserted in chunks to avoid API limits.",
+        "human_parameter_name": "Initial Text Content",
+        "human_parameter_description": "The text you want to add to the start of your new document. This helps set the tone or context for what follows. Leave empty to create a blank document."
+      },
+      "title": {
+        "type": "string",
+        "title": "Title",
+        "examples": [
+          "Quarterly Business Review",
+          "Project Alpha - Brainstorming Notes",
+          "My Vacation Itinerary"
+        ],
+        "description": "Title for the new document, used as its filename in Google Drive.",
+        "human_parameter_name": "Document Title",
+        "human_parameter_description": "The title you want for your new document. This will be the name it shows up with in Google Drive."
+      }
+    }
+  }
+}
