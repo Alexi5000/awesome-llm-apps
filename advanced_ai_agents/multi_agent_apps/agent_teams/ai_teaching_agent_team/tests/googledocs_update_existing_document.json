@@ -1,0 +1,37 @@
+{
+  "source": "https://docs.composio.dev/api/tools/GOOGLEDOCS_UPDATE_EXISTING_DOCUMENT",
+  "retrieved": "2026-10-18",
+  "input_parameters": {
+    "type": "object",
+    "title": "DocumentRequest",
+    "required": [
+      "document_id",
+      "edit_docs"
+    ],
+    "properties": {
+      "edit_docs": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "title": "Edit Docs",
+        "description": "(Required) A list of requests to execute on the document. Each request must be a dict containing exactly ONE of the valid request types listed below.\n\nCommon request types:\nreplaceAllText, insertText, updateTextStyle, createParagraphBullets, deleteParagraphBullets, createNamedRange, deleteNamedRange, updateParagraphStyle, deleteContentRange, insertInlineImage, insertTable, insertTableRow, insertTableColumn, deleteTableRow, deleteTableColumn, insertPageBreak, deletePositionedObject, updateTableColumnProperties, updateTableCellStyle, updateTableRowStyle, replaceImage, updateDocumentStyle, mergeTableCells, unmergeTableCells, createHeader, createFooter, createFootnote, replaceNamedRangeContent, updateSectionStyle, insertSectionBreak, deleteHeader, deleteFooter, pinTableHeaderRows, addDocumentTab, deleteTab, updateDocumentTabProperties, insertPerson.\n\nDo NOT use request types from other Google APIs (Slides, Sheets, etc.).\nFor full request schemas, see https://developers.google.com/docs/api/reference/rest/v1/documents/batchUpdate.\n\nSEGMENT IDs: Use empty string \"\" for document body, or a header/footer/footnote ID from the document. Internal 'kix.' IDs are NOT valid segment IDs and will cause \"Segment with ID ... was not found\" errors. Call GOOGLEDOCS_GET_DOCUMENT_BY_ID to get valid IDs.\n\nTAB IDs: When omitted, operations target the first tab. Invalid tab IDs cause errors. Get valid tab IDs from GOOGLEDOCS_GET_DOCUMENT_BY_ID at tabs[].tabProperties.tabId.\n\nBATCH INSERT OPERATIONS: Operations execute sequentially. Each insertText shifts subsequent indices. For multiple inserts at specific positions, process in REVERSE index order (highest first). For appending, use endOfSegmentLocation for each insert. Auto-correction: insertText without location/endOfSegmentLocation automatically appends to document body.\n\nINDEX BOUNDARIES: location.index must be LESS than the segment end index (valid: 1 to N-1). To insert at the end, use endOfSegmentLocation instead.\n\nPARAGRAPH BOUNDARIES: Text can only be inserted inside existing paragraphs, not at structural boundaries (e.g., a table's start index). For table cells, add +1 or +2 to the cell's startIndex.\n\ndeleteContentRange: The range CANNOT include the trailing newline at segment end. If segment ends at N, use endIndex: N-1.\n\ndeleteTableRow: Requires tableCellLocation object (NOT top-level rowIndex/tableStartLocation). Structure: { tableCellLocation: { tableStartLocation: { index: N }, rowIndex: R, columnIndex: C } }.\n\nupdateTableCellStyle: Use EITHER tableStartLocation (all cells) OR tableRange (specific cells), not both.\n\nStyle updates (updateParagraphStyle, updateTextStyle, updateTableCellStyle, updateDocumentStyle): The 'fields' parameter is auto-populated from style keys if omitted.\n\nDocument title CANNOT be updated via batchUpdate - use Google Drive API instead.\n\nupdateDocumentStyle valid fields: background, marginTop, marginBottom, marginLeft, marginRight, marginHeader, marginFooter, pageSize, pageNumberStart, useEvenPageHeaderFooter, useFirstPageHeaderFooter, flipPageOrientation (NOT \"title\").",
+        "human_parameter_name": "List of Edit Operations",
+        "human_parameter_description": "Provide a list of operations you want to perform on the document. Each operation details how you wish to modify the text or format the document."
+      },
+      "document_id": {
+        "type": "string",
+        "title": "Document Id",
+        "examples": [
+          "12345abcdef",
+          "your_document_id_here"
+        ],
+        "description": "(Required) The unique identifier of the Google Docs document to be updated.",
+        "human_parameter_name": "Document ID",
+        "human_parameter_description": "Provide the unique ID of the Google Docs document you want to update. This ID is essential for identifying the specific document."
+      }
+    },
+    "description": "Request model for updating an existing Google Docs document with specified edit operations."
+  }
+}

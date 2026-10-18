@@ -2,9 +2,7 @@ import streamlit as st
 from agno.agent import Agent
 from agno.run.agent import RunOutput
 from agno.models.openai import OpenAIChat
-from composio_phidata import Action, ComposioToolSet
-import os
-from agno.tools.arxiv import ArxivTools
+from teaching_tools import google_docs_tools
 from agno.utils.pprint import pprint_run_response
 from agno.tools.serpapi import SerpApiTools
 
@@ -26,6 +24,7 @@ with st.sidebar:
     st.title("API Keys Configuration")
     st.session_state['openai_api_key'] = st.text_input("Enter your OpenAI API Key", type="password").strip()
     st.session_state['composio_api_key'] = st.text_input("Enter your Composio API Key", type="password").strip()
+    composio_user_id = st.text_input("Composio user ID", value="default").strip()
     st.session_state['serpapi_api_key'] = st.text_input("Enter your SerpAPI Key", type="password").strip()
     
     # Add info about terminal responses
@@ -36,15 +35,14 @@ if not st.session_state['openai_api_key'] or not st.session_state['composio_api_
     st.error("Please enter OpenAI, Composio, and SerpAPI keys in the sidebar.")
     st.stop()
 
-# Set the OpenAI API key and Composio API key from session state
-os.environ["OPENAI_API_KEY"] = st.session_state['openai_api_key']
+if not composio_user_id:
+    st.error("Enter the Composio user ID connected to your Google Docs account.")
+    st.stop()
 
 try:
-    composio_toolset = ComposioToolSet(api_key=st.session_state['composio_api_key'])
-    google_docs_tool = composio_toolset.get_tools(actions=[Action.GOOGLEDOCS_CREATE_DOCUMENT])[0]
-    google_docs_tool_update = composio_toolset.get_tools(actions=[Action.GOOGLEDOCS_UPDATE_EXISTING_DOCUMENT])[0]
+    document_tools = google_docs_tools(st.session_state['composio_api_key'], composio_user_id)
 except Exception as e:
-    st.error(f"Error initializing ComposioToolSet: {e}")
+    st.error(f"Error initializing Google Docs tools: {e}")
     st.stop()
 
 # Create the Professor agent (formerly KnowledgeBuilder)
@@ -52,7 +50,7 @@ professor_agent = Agent(
     name="Professor",
     role="Research and Knowledge Specialist", 
     model=OpenAIChat(id="gpt-4o-mini", api_key=st.session_state['openai_api_key']),
-    tools=[google_docs_tool],
+    tools=document_tools,
     instructions=[
         "Create a comprehensive knowledge base that covers fundamental concepts, advanced topics, and current developments of the given topic.",
         "Exlain the topic from first principles first. Include key terminology, core principles, and practical applications and make it as a detailed report that anyone who's starting out can read and get maximum value out of it.",
@@ -68,7 +66,7 @@ academic_advisor_agent = Agent(
     name="Academic Advisor",
     role="Learning Path Designer",
     model=OpenAIChat(id="gpt-4o-mini", api_key=st.session_state['openai_api_key']),
-    tools=[google_docs_tool],
+    tools=document_tools,
     instructions=[
         "Using the knowledge base for the given topic, create a detailed learning roadmap.",
         "Break down the topic into logical subtopics and arrange them in order of progression, a detailed report of roadmap that includes all the subtopics in order to be an expert in this topic.",
@@ -86,7 +84,7 @@ research_librarian_agent = Agent(
     name="Research Librarian",
     role="Learning Resource Specialist",
     model=OpenAIChat(id="gpt-4o-mini", api_key=st.session_state['openai_api_key']),
-    tools=[google_docs_tool, SerpApiTools(api_key=st.session_state['serpapi_api_key']) ],
+    tools=[*document_tools, SerpApiTools(api_key=st.session_state['serpapi_api_key']) ],
     instructions=[
         "Make a list of high-quality learning resources for the given topic.",
         "Use the SerpApi search tool to find current and relevant learning materials.",
@@ -103,7 +101,7 @@ teaching_assistant_agent = Agent(
     name="Teaching Assistant",
     role="Exercise Creator",
     model=OpenAIChat(id="gpt-4o-mini", api_key=st.session_state['openai_api_key']),
-    tools=[google_docs_tool, SerpApiTools(api_key=st.session_state['serpapi_api_key'])],
+    tools=[*document_tools, SerpApiTools(api_key=st.session_state['serpapi_api_key'])],
     instructions=[
         "Create comprehensive practice materials for the given topic.",
         "Use the SerpApi search tool to find example problems and real-world applications.",

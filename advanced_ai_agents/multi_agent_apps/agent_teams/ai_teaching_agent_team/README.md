@@ -38,7 +38,7 @@ A Streamlit application that brings together a team of specialized AI teaching a
   ```bash
    # Clone the repository
    git clone https://github.com/Shubhamsaboo/awesome-llm-apps.git
-   cd ai_agent_tutorials/ai_personal_learning_agent
+   cd advanced_ai_agents/multi_agent_apps/agent_teams/ai_teaching_agent_team
 
    # Install dependencies
    pip install -r requirements.txt
@@ -53,12 +53,9 @@ A Streamlit application that brings together a team of specialized AI teaching a
 
 2. Get your Composio API Key
 - Create an account on [Composio Platform](https://composio.ai/)
-- **IMPORTANT** - For you to use the app, you need to make new connection ID with google docs and composio.Follow the below two steps to do so:  
-  - composio add googledocs (IN THE TERMINAL)
-  - Create a new connection 
-  - Select OAUTH2 
-  - Select Google Account and Done.
-  - On the composio account website, go to apps, select google docs tool, and [click create integration](https://app.composio.dev/app/googledocs) (violet button) and click Try connecting default’s googldocs button and we are done. 
+- Connect Google Docs in the [Composio dashboard](https://platform.composio.dev/) using its Google OAuth flow. The API key alone does not grant Google account access.
+- Note the Composio **user ID** assigned to that connection. Enter the same user ID in the app sidebar; `default` retains the previous example's account scope. This is a local single-operator example, not a multi-user authentication system.
+- Use a fresh Python 3.12 virtual environment. The current `composio` SDK replaces `composio-core`, `composio-phidata`, and the old shim package; do not install both generations together.
 
 3. Sign up and get the [SerpAPI Key](https://serpapi.com/)
 
@@ -73,6 +70,12 @@ streamlit run teaching_agent_team.py
 - Enter your OpenAI API key in the sidebar (if not set in environment)
 - Enter your Composio API key in the sidebar 
 - Type a topic you want to learn about (e.g., "Python Programming", "Machine Learning")
-- Click "Generate Learning Plan"
+- Click "Start"
 - Wait for the agents to generate your personalized learning plan
 - View the results and terminal output in the interface
+
+## Runtime compatibility and security validation
+
+The example uses Composio 0.28, Agno 3.1 and OpenAI 2.54. `teaching_tools.py` implements the SDK's [custom agentic-provider contract](https://docs.composio.dev/docs/providers/custom-providers/python) with native Agno functions. It preserves the fetched JSON schemas, validates arguments, and retains Composio's user-scoped execution and error results. Both Google Docs creation and document updates are available to every teaching agent. The current published `composio-agno` package still depends on the legacy SDK and is intentionally not mixed into this environment.
+
+Run offline checks with `python -m unittest discover -s tests -v` from this directory. Tests use the real SDKs and Agno agent loop with intercepted HTTP transports, including create/update document content, user isolation, failure propagation and all four Streamlit agents. Network connections are blocked. The two input-schema fixtures were retrieved from the official public Composio documentation API on 2026-10-18; source URLs are embedded in each fixture. These tests do not validate live OAuth grants, paid model calls or actual Google document delivery.
