@@ -1,4 +1,4 @@
-streamlit==1.41.1
+streamlit==1.54.0
 openai==1.58.1
 duckdb>=1.4.1
 pandas
