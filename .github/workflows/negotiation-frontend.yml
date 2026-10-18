@@ -1,0 +1,34 @@
+name: Negotiation frontend
+
+on:
+  pull_request:
+    paths:
+      - 'advanced_ai_agents/multi_agent_apps/ai_negotiation_battle_simulator/frontend/**'
+      - '.github/workflows/negotiation-frontend.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'advanced_ai_agents/multi_agent_apps/ai_negotiation_battle_simulator/frontend/**'
+      - '.github/workflows/negotiation-frontend.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: advanced_ai_agents/multi_agent_apps/ai_negotiation_battle_simulator/frontend
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      COPILOTKIT_TELEMETRY_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test tests/dependency-security.test.mjs
+      - run: npm run build

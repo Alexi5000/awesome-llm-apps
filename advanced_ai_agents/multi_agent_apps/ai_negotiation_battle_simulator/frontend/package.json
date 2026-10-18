@@ -30,6 +30,8 @@
   },
   "overrides": {
     "undici": "^6.29.1",
-    "@fastify/busboy": "^3.2.3"
+    "@fastify/busboy": "^3.2.3",
+    "katex": "0.18.2",
+    "postcss-selector-parser": "7.1.6"
   }
 }
