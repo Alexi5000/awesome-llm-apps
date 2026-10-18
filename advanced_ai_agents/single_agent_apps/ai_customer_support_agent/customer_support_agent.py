@@ -39,7 +39,7 @@ if openai_api_key:
         def handle_query(self, query, user_id=None):
             try:
                 # Search for relevant memories
-                relevant_memories = self.memory.search(query=query, user_id=user_id)
+                relevant_memories = self.memory.search(query=query, filters={"user_id": user_id})
                 
                 # Build context from relevant memories
                 context = "Relevant past information:\n"
@@ -71,7 +71,7 @@ if openai_api_key:
         def get_memories(self, user_id=None):
             try:
                 # Retrieve all memories for a user
-                return self.memory.get_all(user_id=user_id)
+                return self.memory.get_all(filters={"user_id": user_id})
             except Exception as e:
                 st.error(f"Failed to retrieve memories: {e}")
                 return None

@@ -61,7 +61,7 @@ with st.sidebar:
         # Memory viewing section
         st.header("Memory Context")
         if st.button("View My Memory"):
-            memories = m.get_all(user_id=user_id)
+            memories = m.get_all(filters={"user_id": user_id})
             if memories and "results" in memories:
                 st.write(f"Memory history for **{user_id}**:")
                 for memory in memories["results"]:
@@ -88,7 +88,7 @@ if user_id:  # Only show chat interface if user is "logged in"
         m.add(prompt, user_id=user_id)
         
         # Get context from memory
-        memories = m.get_all(user_id=user_id)
+        memories = m.get_all(filters={"user_id": user_id})
         context = ""
         if memories and "results" in memories:
             for memory in memories["results"]:

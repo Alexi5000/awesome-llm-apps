@@ -33,12 +33,12 @@ if openai_api_key:
 
     if st.button('Chat with LLM'):
         with st.spinner('Searching...'):
-            relevant_memories = memory.search(query=prompt, user_id=user_id)
+            relevant_memories = memory.search(query=prompt, filters={"user_id": user_id})
             # Prepare context with relevant memories
             context = "Relevant past information:\n"
 
-            for mem in relevant_memories:
-                context += f"- {mem['text']}\n"
+            for mem in relevant_memories["results"]:
+                context += f"- {mem['memory']}\n"
                 
             # Prepare the full prompt
             full_prompt = f"{context}\nHuman: {prompt}\nAI:"
@@ -63,7 +63,7 @@ if openai_api_key:
     # Sidebar option to show memory
     st.sidebar.title("Memory Info")
     if st.button("View My Memory"):
-            memories = memory.get_all(user_id=user_id)
+            memories = memory.get_all(filters={"user_id": user_id})
             if memories and "results" in memories:
                 st.write(f"Memory history for **{user_id}**:")
                 for mem in memories["results"]:

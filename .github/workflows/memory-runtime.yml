@@ -1,0 +1,33 @@
+name: Memory SDK runtime
+on:
+  pull_request:
+    paths:
+      - 'advanced_llm_apps/llm_apps_with_memory_tutorials/**'
+      - 'advanced_ai_agents/single_agent_apps/ai_customer_support_agent/**'
+      - '.github/workflows/memory-runtime.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'advanced_llm_apps/llm_apps_with_memory_tutorials/**'
+      - 'advanced_ai_agents/single_agent_apps/ai_customer_support_agent/**'
+      - '.github/workflows/memory-runtime.yml'
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: >-
+          python -m pip install
+          -r advanced_llm_apps/llm_apps_with_memory_tutorials/multi_llm_memory/requirements.txt
+          -r advanced_llm_apps/llm_apps_with_memory_tutorials/local_chatgpt_with_memory/requirements.txt
+          -r advanced_llm_apps/llm_apps_with_memory_tutorials/llm_app_personalized_memory/requirements.txt
+          -r advanced_llm_apps/llm_apps_with_memory_tutorials/ai_travel_agent_memory/requirements.txt
+          -r advanced_ai_agents/single_agent_apps/ai_customer_support_agent/requirements.txt
+      - run: python -m pip check
+      - run: python -m unittest discover -s advanced_llm_apps/llm_apps_with_memory_tutorials/tests -v
