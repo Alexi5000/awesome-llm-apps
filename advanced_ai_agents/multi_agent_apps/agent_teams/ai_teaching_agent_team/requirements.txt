@@ -1,4 +1,4 @@
-streamlit==1.41.1
+streamlit==1.54.0
 openai==1.58.1
 duckduckgo-search>=6.4.2,<9
 typing-extensions>=4.5.0
