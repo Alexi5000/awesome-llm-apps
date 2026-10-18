@@ -46,7 +46,9 @@ class _PinnedHTTPSConnection(_PinnedHTTPConnection):
     def connect(self):
         super().connect()
         try:
-            self.sock = ssl.create_default_context().wrap_socket(self.sock, server_hostname=self.host)
+            context = ssl.create_default_context()
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            self.sock = context.wrap_socket(self.sock, server_hostname=self.host)
         except Exception:
             self.sock.close()
             raise

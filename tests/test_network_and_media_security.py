@@ -106,6 +106,7 @@ class PublicFetchTests(unittest.TestCase):
         connect.assert_called_once_with(("8.8.8.8", 443), 20)
         dns.assert_not_called()
         context.wrap_socket.assert_called_once_with(sock, server_hostname="example.com")
+        self.assertEqual(context.minimum_version, ssl.TLSVersion.TLSv1_2)
 
     def test_tls_validation_errors_are_not_ignored(self):
         context = Mock()
