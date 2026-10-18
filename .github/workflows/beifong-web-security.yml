@@ -1,0 +1,30 @@
+name: Beifong web security
+
+on:
+  pull_request:
+    paths:
+      - 'advanced_ai_agents/multi_agent_apps/ai_news_and_podcast_agents/web/**'
+      - '.github/workflows/beifong-web-security.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'advanced_ai_agents/multi_agent_apps/ai_news_and_podcast_agents/web/**'
+      - '.github/workflows/beifong-web-security.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: advanced_ai_agents/multi_agent_apps/ai_news_and_podcast_agents/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --package-lock=false
+      - run: npm test -- --watchAll=false --runInBand --runTestsByPath src/pages/ArticleDetail.security.test.js src/components/ChatMessage.security.test.js
