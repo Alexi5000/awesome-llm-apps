@@ -230,6 +230,7 @@ class DependencyRuntimeTests(unittest.TestCase):
         self.assertEqual(result["parsed_entries"][0]["entry_id"], "story-1")
 
     def test_async_http_stack(self):
+        import httpx2
         async def request():
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.url) as response:
@@ -238,6 +239,10 @@ class DependencyRuntimeTests(unittest.TestCase):
             async with httpx.AsyncClient(http2=True) as client:
                 response = await client.get(self.url)
                 self.assertEqual(response.status_code, 200)
+            async with httpx2.AsyncClient() as client:
+                response = await client.get(self.url)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("News content", response.text)
         asyncio.run(request())
 
     def test_multipart_upload(self):

@@ -79,11 +79,12 @@ h2==4.4.1
 hpack==4.2.0
 httpcore==1.0.9
 httpx==0.28.1
+httpx2==2.13.1
 huggingface-hub==2.2.0
 humanize==4.12.3
 hupper==1.12.1
 hyperframe==6.1.0
-idna==3.15
+idna==3.18
 isodate==0.7.2
 itsdangerous==2.2.0
 janus==2.0.0
