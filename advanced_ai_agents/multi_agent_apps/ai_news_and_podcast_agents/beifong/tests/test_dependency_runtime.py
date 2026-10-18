@@ -56,6 +56,18 @@ class DependencyRuntimeTests(unittest.TestCase):
         cls.thread.join()
         cls.server.server_close()
 
+    def test_browser_support_crypto_and_mcp_contract(self):
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        from cryptography.exceptions import InvalidSignature
+        from mcp.types import Tool
+        key = Ed25519PrivateKey.generate()
+        signature = key.sign(b"offline payload")
+        key.public_key().verify(signature, b"offline payload")
+        with self.assertRaises(InvalidSignature):
+            key.public_key().verify(signature, b"changed payload")
+        tool = Tool.model_validate({"name": "search", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}}}})
+        self.assertEqual(tool.model_dump()["inputSchema"]["properties"]["query"]["type"], "string")
+
     def test_existing_agno_session_schema_remains_readable(self):
         import tempfile
         import sqlite3
