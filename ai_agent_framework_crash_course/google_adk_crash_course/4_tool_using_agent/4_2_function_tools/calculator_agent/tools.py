@@ -1,4 +1,36 @@
+import ast
 import math
+import operator
+
+
+def _evaluate_arithmetic(expression: str) -> float:
+    if not isinstance(expression, str) or not expression.strip() or len(expression) > 512:
+        raise ValueError("Expression must contain 1 to 512 characters")
+    tree = ast.parse(expression.strip(), mode="eval")
+    if sum(1 for _ in ast.walk(tree)) > 128:
+        raise ValueError("Expression is too complex")
+    operations = {ast.Add: operator.add, ast.Sub: operator.sub,
+                  ast.Mult: operator.mul, ast.Div: operator.truediv,
+                  ast.FloorDiv: operator.floordiv}
+
+    def evaluate(node, depth=0):
+        if depth > 32:
+            raise ValueError("Expression is too deeply nested")
+        if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+            value = float(node.value)
+        elif isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+            value = evaluate(node.operand, depth + 1)
+            if isinstance(node.op, ast.USub):
+                value = -value
+        elif isinstance(node, ast.BinOp) and type(node.op) in operations:
+            value = operations[type(node.op)](evaluate(node.left, depth + 1), evaluate(node.right, depth + 1))
+        else:
+            raise ValueError("Only basic arithmetic is supported")
+        if not math.isfinite(value) or abs(value) > 1e100:
+            raise ValueError("Arithmetic result is out of range")
+        return value
+
+    return evaluate(tree.body)
 from typing import Dict, Union, List
 
 def calculate_basic_math(expression: str) -> Dict[str, Union[float, str]]:
@@ -16,18 +48,8 @@ def calculate_basic_math(expression: str) -> Dict[str, Union[float, str]]:
         Dictionary containing the result and operation details
     """
     try:
-        # Remove any potentially dangerous characters and keep only safe ones
-        allowed_chars = "0123456789+-*/.() "
-        safe_expression = ''.join(c for c in expression if c in allowed_chars)
-        
-        if not safe_expression.strip():
-            return {
-                "error": "Empty or invalid expression",
-                "status": "error"
-            }
-        
-        # Evaluate the expression
-        result = eval(safe_expression)
+        result = _evaluate_arithmetic(expression)
+        safe_expression = expression.strip()
         
         return {
             "result": float(result),
