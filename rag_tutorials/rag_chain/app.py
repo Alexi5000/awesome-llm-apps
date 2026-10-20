@@ -1,4 +1,5 @@
 import os
+import tempfile
 import streamlit as st
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -49,34 +50,31 @@ def add_to_db(uploaded_files):
         return
 
     for uploaded_file in uploaded_files:
-        # Save the uploaded file to a temporary path
-        temp_file_path = os.path.join("./temp", uploaded_file.name)
-        os.makedirs(os.path.dirname(temp_file_path), exist_ok=True)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_file_path = os.path.join(temp_dir, "document.pdf")
+            with open(temp_file_path, "wb") as temp_file:
+                temp_file.write(uploaded_file.getbuffer())
 
-        with open(temp_file_path, "wb") as temp_file:
-            temp_file.write(uploaded_file.getbuffer())
+            # Load the file using PyPDFLoader
+            loader = PyPDFLoader(temp_file_path)
+            data = loader.load()
 
-        # Load the file using PyPDFLoader
-        loader = PyPDFLoader(temp_file_path)
-        data = loader.load()
+            # Store metadata and content
+            doc_metadata = [data[i].metadata for i in range(len(data))]
+            doc_content = [data[i].page_content for i in range(len(data))]
 
-        # Store metadata and content
-        doc_metadata = [data[i].metadata for i in range(len(data))]
-        doc_content = [data[i].page_content for i in range(len(data))]
+            # Split documents into smaller chunks
+            st_text_splitter = SentenceTransformersTokenTextSplitter(
+                model_name="sentence-transformers/all-mpnet-base-v2",
+                chunk_size=100,
+                chunk_overlap=50
+            )
+            st_chunks = st_text_splitter.create_documents(doc_content, doc_metadata)
 
-        # Split documents into smaller chunks
-        st_text_splitter = SentenceTransformersTokenTextSplitter(
-            model_name="sentence-transformers/all-mpnet-base-v2",
-            chunk_size=100,
-            chunk_overlap=50
-        )
-        st_chunks = st_text_splitter.create_documents(doc_content, doc_metadata)
+            # Add chunks to database
+            db.add_documents(st_chunks)
 
-        # Add chunks to database
-        db.add_documents(st_chunks)
 
-        # Remove the temporary file after processing
-        os.remove(temp_file_path)
 
 def run_rag_chain(query):
     """Processes a query using a Retrieval-Augmented Generation (RAG) chain.

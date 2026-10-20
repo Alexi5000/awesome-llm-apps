@@ -1,5 +1,7 @@
 import requests
 import os
+import hashlib
+import tempfile
 import io
 import base64
 import PIL
@@ -10,6 +12,14 @@ import streamlit as st
 import cohere
 from google import genai
 import fitz # PyMuPDF
+
+def upload_image_path(uploaded_file, upload_folder):
+    suffix = {"image/png": ".png", "image/jpeg": ".jpg", "application/pdf": ".pdf"}.get(uploaded_file.type)
+    if suffix is None:
+        raise ValueError("Unsupported upload type")
+    digest = hashlib.sha256(uploaded_file.getbuffer()).hexdigest()
+    return os.path.join(upload_folder, digest + suffix)
+
 
 # --- Streamlit App Configuration ---
 st.set_page_config(layout="wide", page_title="Vision RAG with Cohere Embed-4")
@@ -163,7 +173,7 @@ def process_pdf_file(pdf_file, cohere_client, base_output_folder="pdf_pages") ->
     page_image_paths = []
     page_embeddings = []
     pdf_filename = pdf_file.name
-    output_folder = os.path.join(base_output_folder, os.path.splitext(pdf_filename)[0])
+    output_folder = os.path.join(base_output_folder, hashlib.sha256(pdf_file.getbuffer()).hexdigest())
     os.makedirs(output_folder, exist_ok=True)
 
     try:
@@ -419,22 +429,26 @@ if uploaded_files and co:
     progress_bar = st.progress(0)
     
     # Create a temporary directory for uploaded images
-    upload_folder = "uploaded_img"
-    os.makedirs(upload_folder, exist_ok=True)
+    if "upload_directory" not in st.session_state:
+        st.session_state.upload_directory = tempfile.TemporaryDirectory()
+    upload_folder = st.session_state.upload_directory.name
     
     newly_uploaded_paths = []
     newly_uploaded_embeddings = []
 
     for i, uploaded_file in enumerate(uploaded_files):
         # Check if already processed this session (simple name check)
-        img_path = os.path.join(upload_folder, uploaded_file.name)
+        if uploaded_file.type not in {"image/png", "image/jpeg", "application/pdf"}:
+            st.warning("Unsupported upload type skipped")
+            continue
+        img_path = upload_image_path(uploaded_file, upload_folder)
         if img_path not in st.session_state.image_paths:
             try:
                 # Check file type
                 file_type = uploaded_file.type
                 if file_type == "application/pdf":
                     # Process PDF - returns list of paths and list of embeddings
-                    pdf_page_paths, pdf_page_embeddings = process_pdf_file(uploaded_file, cohere_client=co)
+                    pdf_page_paths, pdf_page_embeddings = process_pdf_file(uploaded_file, cohere_client=co, base_output_folder=upload_folder)
                     if pdf_page_paths and pdf_page_embeddings:
                          # Add only paths/embeddings not already in session state
                          current_paths_set = set(st.session_state.image_paths)
