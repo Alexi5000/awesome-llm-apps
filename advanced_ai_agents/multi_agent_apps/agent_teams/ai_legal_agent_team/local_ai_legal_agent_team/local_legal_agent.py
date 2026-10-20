@@ -28,7 +28,7 @@ def init_qdrant():
 def process_document(uploaded_file, vector_db: Qdrant):
     """Process document using local resources"""
     with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file_path = os.path.join(temp_dir, uploaded_file.name)
+        temp_file_path = os.path.join(temp_dir, "document.pdf")
         with open(temp_file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
 
