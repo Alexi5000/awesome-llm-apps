@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/verify-braces.cjs && next build",
+    "test:security": "node scripts/verify-braces.cjs",
     "start": "next start",
     "lint": "eslint"
   },
@@ -14,7 +15,9 @@
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0"
   },
+  "overrides": { "braces": "$braces" },
   "devDependencies": {
+    "braces": "file:vendor/braces-3.0.3.tgz",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
