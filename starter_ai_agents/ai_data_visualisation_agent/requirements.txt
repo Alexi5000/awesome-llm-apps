@@ -1,7 +1,7 @@
 together==2.41.0
 e2b-code-interpreter==1.0.3
 e2b==1.0.5
-Pillow==12.3.0
-streamlit==1.54.0
+Pillow==13.0.0
+streamlit==1.66.1
 pandas
 matplotlib

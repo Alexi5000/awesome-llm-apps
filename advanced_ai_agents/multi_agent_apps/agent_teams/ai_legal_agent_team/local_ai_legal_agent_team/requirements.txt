@@ -1,4 +1,5 @@
 agno>=2.2.10
-streamlit==1.54.0  # Minimum patched release for GHSA-7p48-42j8-8846
+streamlit==1.66.1  # Minimum patched release for GHSA-7p48-42j8-8846
 qdrant-client==1.12.1
 ollama==0.4.4
+Pillow==13.0.0
