@@ -31,7 +31,7 @@
 
 # 🌟 Awesome LLM Apps
 
-<p><strong>100+ AI Agent & RAG apps you can actually run — clone, customize, ship.</strong><br/>
+<p><strong>100+ AI Agent & RAG apps you can actually run: clone, customize, ship.</strong><br/>
 AI Agents · Multi-agent Teams · MCP Agents · RAG · Voice Agents · Agent Skills · Fine-tuning</p>
 
 <p>
@@ -61,11 +61,22 @@ AI Agents · Multi-agent Teams · MCP Agents · RAG · Voice Agents · Agent Ski
 
 ---
 
-## Alexi's fork purpose
+## Why this fork exists
 
-This fork is **Alexi5000’s applied agent-engineering reference library**. It is maintained as a practical review surface for the workflows Alex has developed across more than a year of agent building, automation design, and hands-on work with Cursor, Claude, Codex-class coding agents, MCP integrations, retrieval systems, and multi-agent orchestration.
+This fork is **Alexi5000’s applied agent-engineering reference library**, maintained by Alex Cinovoj, Founder & CTO of TechTide AI. It is a practical review surface for the workflows Alex has developed across more than a year of agent building, automation design, and hands-on work with Cursor, Claude, Codex-class coding agents, MCP integrations, retrieval systems, and multi-agent orchestration.
 
-The upstream catalog remains the foundation. This fork adds a clear operating model for evaluating examples as production-minded learning artifacts: traceable setup, explicit safety boundaries, maintainable integrations, and reproducible repository quality checks. It is a reference collection rather than a claim that every included example is production-ready for every environment.
+**What it does.** The repository keeps the upstream catalog of runnable LLM, agent, MCP, RAG, and voice examples, each with its own `requirements.txt`, and adds a root-level quality contract: `tests/` holds catalog contract tests plus upload, calculator, external-content, and network/media security regressions, and `.github/workflows/` runs those tests, compiles every Python example, and exercises fifteen per-example runtime workflows on the examples that have been patched in this fork.
+
+**Who it serves.** Agent builders, automation engineers, AI-assisted developers, and reviewers who want to compare working patterns (tools, MCP, routing, RAG, memory, multi-agent teams) and check an example's dependency state and safety boundaries before adapting it to a real product. It is a reference collection, not a claim that every example is production-ready for every environment.
+
+**Why Alex forked it.** The fork was created on 2025-10-20 (GitHub `created_at`). In May 2026 it staged three upstream pull requests to Shubhamsaboo/awesome-llm-apps: [#830](https://github.com/Shubhamsaboo/awesome-llm-apps/pull/830) (remove stdlib modules from `requirements.txt`, merged 2026-05-21), [#829](https://github.com/Shubhamsaboo/awesome-llm-apps/pull/829) (CONTRIBUTING checklist, closed), and [#831](https://github.com/Shubhamsaboo/awesome-llm-apps/pull/831) (sidebar API-key input instead of hardcoded placeholders, closed); their source branches are retained here as `pr/*`. The first fork-only commit on `main` (`fa0ac1a`, 2026-08-17, "docs: establish agent engineering fork standards") added [FORK_POLICY.md](./FORK_POLICY.md), which records the purpose: an applied agent-engineering fork that "preserves upstream credit and Apache-2.0 licensing while adding Alexi5000-specific documentation, quality gates, and review guidance for agent-building and automation practice". Commits `933ca61` and `934e945` (2026-08-17) added the catalog quality workflow on Python 3.12, and the October 2026 series (#1 to #42, 2026-10-18 to 2026-10-20) patched vulnerable example dependencies and added security regressions for upload paths, rendered content, link hosts, and arithmetic evaluation.
+
+**Real-world use case (2025–2026 evidence).** **Verified in this repository.** A reviewer picks a catalog example (for instance the legal document RAG or a Streamlit single-file agent), confirms that user-supplied filenames cannot escape the example's temporary directory, and only then adapts it with their own corpus and credentials. The checks that back this scenario run in the `Quality` workflow on every push and pull request: `tests/test_legal_upload_security.py`, `tests/test_rag_upload_security.py`, `tests/test_calculator_security.py`, `tests/test_external_content_security.py`, and `tests/test_network_and_media_security.py` (30 tests, passing on `main` at `2a9d2af`, 2026-10-20). The surrounding ecosystem moved quickly in 2025 and 2026: the MCP specification that the `mcp_ai_agents` examples target was revised on 2025-06-18[^1]; Streamlit, used by most single-file examples here, shipped 1.66.0 on 2026-10-14[^2]; and NLTK, pinned by the Beifong example, published advisory GHSA-8mgp-746c-j5xp in September 2026[^3] followed by a 3.10.4 release on 2026-10-21 that describes a path sandbox for data and model files[^4]. No model provider, browser agent, or external action is executed by these tests.
+
+[^1]: Model Context Protocol, "Specification 2025-06-18", published 2025-06-18. https://modelcontextprotocol.io/specification/2025-06-18
+[^2]: Streamlit, "1.66.0" release notes, published 2026-10-14. https://github.com/streamlit/streamlit/releases/tag/1.66.0
+[^3]: GitHub Advisory Database, "GHSA-8mgp-746c-j5xp: NLTK model-artifact APIs bypass pathsec", published 2026-09-02. https://github.com/advisories/GHSA-8mgp-746c-j5xp
+[^4]: NLTK, "v3.10.4" release notes, published 2026-10-21. https://github.com/nltk/nltk/releases/tag/v3.10.4
 
 | This fork is for | How to use it |
 |---|---|
@@ -73,6 +84,20 @@ The upstream catalog remains the foundation. This fork adds a clear operating mo
 | **Automation engineers** | Evaluate integration boundaries, credentials handling, reviewability, and operational fit before connecting external systems. |
 | **AI-assisted developers** | Use the examples as structured prompts and implementation references with Cursor, Claude, Codex-class assistants, or comparable coding environments. |
 | **Reviewers and contributors** | Propose focused improvements that preserve upstream attribution while raising reproducibility and documentation quality. |
+
+## Upstream
+
+- Upstream project: [Shubhamsaboo/awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps), licensed under [Apache-2.0](LICENSE). The upstream catalog, its authors, and its contributors retain full credit for their work; the license file is preserved unchanged and nothing in this fork is relicensed.
+- Fork created: 2025-10-20. Default branch: `main`.
+- Position relative to upstream `main` at 2026-10-21: 46 commits ahead, 319 commits behind (`gh api compare Shubhamsaboo:main...main`). Upstream examples added after the fork point are not present here; see [FORK_POLICY.md](./FORK_POLICY.md) for the synchronization discipline.
+- Fork-specific documentation and quality controls are maintained by Alex Cinovoj (GitHub `Alexi5000`) and should not be represented as upstream changes unless separately contributed and accepted upstream.
+
+**What changed in this fork** (`git log upstream/main..origin/main`: 46 commits; `git diff --stat`: 227 files, +21,792 / -13,622 lines):
+
+- Fork standards and policy files: `FORK_POLICY.md`, `SECURITY.md`, `SUPPORT.md`, `CONTRIBUTING.md`, the fork sections of this README, and `tests/test_repository_contract.py` (`fa0ac1a`, `e00b2a7`).
+- CI: the root `Quality` workflow (contract tests plus `compileall` on Python 3.12) and fifteen per-example runtime workflows (AQI, Beifong, memory, negotiation frontend, RAG loaders, recruitment, routing, startup trends, teaching, visualisation, voice/math, Windows agent, and others).
+- Dependency repairs across patched examples: Streamlit, Requests, python-dotenv, LangChain and LangGraph, Qdrant, Agno, Mem0, Composio, Next.js and React, Electron, PostCSS, aiohttp/yarl, and image codec updates (#1 to #37, #41).
+- Security regressions and fixes in example code: bounded calculator evaluation (#38), confined legal-document and RAG upload paths (#39, #40), sanitized rendered content and validated link hosts (#35), pinned URL ingestion and confined media downloads (#34), and fail-closed AQI fetching (#17).
 
 ## Upstream catalog background
 
@@ -348,15 +373,18 @@ python3 -m compileall -q \
   - Swarm orchestration; routing logic
 
 
+## Security
+
+- Open Dependabot alerts at 2026-10-21: 1. `nltk==3.10.3` in `advanced_ai_agents/multi_agent_apps/ai_news_and_podcast_agents/beifong/requirements.txt` is affected by [GHSA-8mgp-746c-j5xp](https://github.com/advisories/GHSA-8mgp-746c-j5xp) (high; model-artifact APIs bypass `pathsec`), a known upstream advisory with no fixed release as of 2026-10-20. NLTK 3.10.4 was published on 2026-10-21 with sandboxing changes, but the advisory had not been updated with a patched version when this README was written, so the pin is unchanged and the alert is left open rather than dismissed.
+- That requirement is scoped to the Beifong example. The root `Quality` workflow installs only `fastapi` and never installs example requirements; the `Beifong dependency runtime` workflow installs them in a disposable virtual environment on CI only.
+- Mitigation already in this repository: none specific to this advisory beyond the example-scoped install. Treat Beifong's NLTK model and data downloads as untrusted input and run the example in an isolated environment.
+- Report vulnerabilities privately as described in [SECURITY.md](./SECURITY.md).
+
 ## Support and contribution path
 
 Use [GitHub Issues](https://github.com/Alexi5000/awesome-llm-apps/issues) for reproducible documentation defects, broken catalog paths, or focused discussion of a fork-specific improvement. For contribution expectations, security reporting, conduct standards, and the upstream-sync policy, read [CONTRIBUTING.md](./CONTRIBUTING.md), [SECURITY.md](./SECURITY.md), [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md), [SUPPORT.md](./SUPPORT.md), and [FORK_POLICY.md](./FORK_POLICY.md).
 
 Do not place API keys, OAuth tokens, private datasets, customer information, or unreported vulnerabilities in issues or pull requests. Every agent example should be reviewed against the provider’s current documentation and your own security, privacy, and deployment requirements before use.
-
-## Upstream attribution
-
-This repository is a fork of [Shubhamsaboo/awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps). The upstream catalog, its authors, and its contributors retain full credit for their work. Fork-specific documentation and quality controls are maintained by Alexi5000 and should not be represented as upstream changes unless separately contributed and accepted upstream.
 
 ## 🙏 Built by
 

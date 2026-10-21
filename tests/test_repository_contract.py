@@ -23,13 +23,14 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_readme_defines_the_fork_identity_and_safe_start_path(self):
         required_markers = (
-            "## Alexi's fork purpose",
+            "## Why this fork exists",
             "Alexi5000’s applied agent-engineering reference library",
             "## Verified setup",
             "python3 -m unittest discover -s tests",
             "## Use cases",
             "## Support and contribution path",
-            "## Upstream attribution",
+            "## Upstream",
+            "## Security",
         )
         for marker in required_markers:
             self.assertIn(marker, README, f"README is missing: {marker}")
