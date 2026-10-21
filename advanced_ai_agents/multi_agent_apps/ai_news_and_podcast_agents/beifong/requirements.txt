@@ -27,7 +27,7 @@ browser-use==0.5.11
 cachetools==5.5.2
 catalogue==2.0.10
 celery==5.5.2
-certifi==2025.1.31
+certifi==2026.10.19
 cffi==2.0.0
 cryptography==50.0.0
 charset-normalizer==3.4.1
@@ -125,7 +125,7 @@ multidict==6.4.3
 murmurhash==1.0.12
 networkx==3.4.2
 newspaper4k==0.9.3.1
-nltk==3.10.3
+nltk==3.10.4
 num2words==0.5.14
 numba==0.61.2
 numpy==1.26.4
