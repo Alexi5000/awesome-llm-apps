@@ -17,10 +17,6 @@ def upload_dir() -> str:
     return os.path.realpath(os.path.expanduser(os.getenv(UPLOAD_DIR_ENV) or DEFAULT_UPLOAD_DIR))
 
 
-def _inside(root: str, candidate: str) -> bool:
-    return candidate.startswith(root + os.sep)
-
-
 def resolve_upload_media(path: str) -> str:
     """Return the resolved path if it is an uploaded media file, else raise ValueError."""
     if not isinstance(path, str) or not path.strip() or "\x00" in path:
@@ -28,13 +24,13 @@ def resolve_upload_media(path: str) -> str:
     root = upload_dir()
     # Lexical containment first, before the filesystem is consulted at all.
     candidate = os.path.normpath(os.path.join(root, path.strip()))
-    if not _inside(root, candidate):
+    if not candidate.startswith(root + os.sep):
         raise ValueError("Media files must be inside the upload directory.")
     if os.path.islink(candidate):
         raise ValueError("Symlinked media files are not accepted.")
     # Then re-check after resolving any symlinked parent directories.
     resolved = os.path.realpath(candidate)
-    if not _inside(root, resolved):
+    if not resolved.startswith(root + os.sep):
         raise ValueError("Media files must be inside the upload directory.")
     if not os.path.isfile(resolved):
         raise ValueError("Media file not found in the upload directory.")
