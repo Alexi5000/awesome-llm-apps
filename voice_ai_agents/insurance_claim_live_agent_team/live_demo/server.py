@@ -49,6 +49,19 @@ def _cors_origins() -> list[str]:
     return ["http://127.0.0.1:4177", "http://localhost:4177"]
 
 
+def _websocket_origins() -> set[str]:
+    """Browser origins allowed to open /ws/live. Defaults to the CORS allowlist."""
+    raw = os.getenv("FNOL_WS_ORIGINS", "")
+    origins = raw.split(",") if raw.strip() else _cors_origins()
+    return {origin.strip().rstrip("/") for origin in origins if origin.strip()}
+
+
+def _websocket_origin_allowed(origin: str | None) -> bool:
+    # CORS does not apply to WebSockets, so the handshake Origin must be checked
+    # explicitly before the socket can spend the operator's Gemini credentials.
+    return bool(origin) and origin.strip().rstrip("/") in _websocket_origins()
+
+
 _load_dotenv()
 
 from agent import (  # noqa: E402
@@ -499,6 +512,10 @@ async def message(request: MessageRequest) -> SessionResponse:
 
 @app.websocket("/ws/live")
 async def live_voice(websocket: WebSocket) -> None:
+    if not _websocket_origin_allowed(websocket.headers.get("origin")):
+        logger.warning("Rejected /ws/live handshake from origin %r", websocket.headers.get("origin"))
+        await websocket.close(code=1008)
+        return
     await websocket.accept()
     session_id = str(uuid.uuid4())
     session = IntakeSession(session_id=session_id)
