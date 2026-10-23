@@ -4,13 +4,13 @@ import uuid
 from fastapi import status
 from fastapi.responses import JSONResponse
 import aiosqlite
-import glob
 from redis.asyncio import ConnectionPool, Redis
 from db.config import get_agent_session_db_path
 from db.agent_config_v2 import PODCAST_DIR, PODCAST_AUIDO_DIR, PODCAST_IMG_DIR, PODCAST_RECORDINGS_DIR, AVAILABLE_LANGS
 from services.celery_tasks import agent_chat
 from dotenv import load_dotenv
 from services.internal_session_service import SessionService
+from services.safe_paths import media_path
 
 load_dotenv()
 
@@ -99,14 +99,15 @@ class PodcastAgentService:
 
     def _browser_recording(self, session_id):
         try:
-            recordings_dir = os.path.join("podcasts/recordings", session_id)
-            webm_files = glob.glob(os.path.join(recordings_dir, "*.webm"))
-            if webm_files:
-                browser_recording_path = webm_files[0]
-                if (os.path.exists(browser_recording_path) and 
-                    os.path.getsize(browser_recording_path) > 8192 and 
-                    os.access(browser_recording_path, os.R_OK)):
-                    return browser_recording_path
+            recordings_dir = media_path(PODCAST_RECORDINGS_DIR, session_id)
+            with os.scandir(recordings_dir) as entries:
+                for entry in entries:
+                    if not entry.name.endswith(".webm") or not entry.is_file(follow_symlinks=False):
+                        continue
+                    browser_recording_path = media_path(recordings_dir, entry.name)
+                    if (os.path.getsize(browser_recording_path) > 8192 and
+                        os.access(browser_recording_path, os.R_OK)):
+                        return os.path.relpath(browser_recording_path)
             return None
         except Exception as _:
             return None
@@ -278,6 +279,7 @@ class PodcastAgentService:
                     banner_url = session_state.get("banner_url")
                     audio_url = session_state.get("audio_url")
                     web_search_recording = session_state.get("web_search_recording")
+                    recording_dir = media_path(PODCAST_RECORDINGS_DIR, session_id) if web_search_recording and not is_completed else None
                     await conn.execute("DELETE FROM podcast_sessions WHERE session_id = ?", (session_id,))
                     await conn.commit()
                     if is_completed:
@@ -299,8 +301,7 @@ class PodcastAgentService:
                                     print(f"Deleted audio file: {audio_path}")
                                 except Exception as e:
                                     print(f"Error deleting audio file: {e}")
-                        if web_search_recording:
-                            recording_dir = os.path.join(PODCAST_RECORDINGS_DIR, session_id)
+                        if recording_dir:
                             if os.path.exists(recording_dir):
                                 try:
                                     import shutil
