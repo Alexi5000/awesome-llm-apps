@@ -513,7 +513,8 @@ async def message(request: MessageRequest) -> SessionResponse:
 @app.websocket("/ws/live")
 async def live_voice(websocket: WebSocket) -> None:
     if not _websocket_origin_allowed(websocket.headers.get("origin")):
-        logger.warning("Rejected /ws/live handshake from origin %r", websocket.headers.get("origin"))
+        origin = str(websocket.headers.get("origin"))[:200].replace("\r", "\\r").replace("\n", "\\n")
+        logger.warning("Rejected /ws/live handshake from origin %s", origin)
         await websocket.close(code=1008)
         return
     await websocket.accept()
