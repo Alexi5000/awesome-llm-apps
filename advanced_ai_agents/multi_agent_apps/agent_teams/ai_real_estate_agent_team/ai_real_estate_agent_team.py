@@ -437,7 +437,7 @@ def run_sequential_analysis(city, state, user_criteria, selected_websites, firec
     
     # Extract and add property links
     all_text = f"{json.dumps(properties, indent=2)} {market_analysis} {property_valuations}"
-    urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', all_text)
+    urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$_@.&+:/?#=~-]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', all_text)
     
     if urls:
         final_synthesis += "\n### Available Property Links:\n"
