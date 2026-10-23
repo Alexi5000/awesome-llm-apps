@@ -7,12 +7,12 @@
 """
 
 import json
-import os
 from typing import Callable, List, Optional
 
 from pydantic import BaseModel, Field
 
 from google.adk.agents import Agent
+from google.adk.models import Gemini
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
@@ -39,17 +39,23 @@ class SkillMutation(BaseModel):
 # -- Optimizer ---------------------------------------------------------------
 
 
+class OptimizationStopped(Exception):
+    """Raised when the caller asked the optimizer to stop before the next model call."""
+
+
 class SkillOptimizer:
     def __init__(self, api_key: str, model: str = "gemini-3-flash-preview"):
-        # ADK agents authenticate via this env var
-        os.environ["GOOGLE_API_KEY"] = api_key
+        # Bind the caller's key to this optimizer's own Gemini client instead of
+        # the process-wide GOOGLE_API_KEY, so concurrent sessions never swap keys.
         self.model = model
+        self._llm = Gemini(model=model, client_kwargs={"api_key": api_key, "vertexai": False})
         self._session_service = InMemorySessionService()
         self._call_id = 0
+        self._should_stop: Optional[Callable[[], bool]] = None
 
         self.executor = Agent(
             name="executor",
-            model=model,
+            model=self._llm,
             instruction=(
                 "You are a versatile skill execution agent. You have three modes:\n\n"
                 "1. EXECUTE MODE: Given a skill's instructions and a user request, "
@@ -63,7 +69,7 @@ class SkillOptimizer:
         )
         self.analyst = Agent(
             name="analyst",
-            model=model,
+            model=self._llm,
             instruction=(
                 "You diagnose why agent skill evaluations fail. "
                 "Given failed eval results, identify the root cause and suggest "
@@ -74,7 +80,7 @@ class SkillOptimizer:
         )
         self.mutator = Agent(
             name="mutator",
-            model=model,
+            model=self._llm,
             instruction=(
                 "You edit agent skill files. Given a SKILL.md and a diagnosis, "
                 "make exactly ONE targeted change. Keep the YAML frontmatter and "
@@ -87,6 +93,7 @@ class SkillOptimizer:
 
     async def _ask(self, agent: Agent, prompt: str) -> str:
         """Run an ADK agent with a prompt, return text response."""
+        self._raise_if_stopped()
         self._call_id += 1
         uid = f"u{self._call_id}"
         runner = Runner(
@@ -106,6 +113,10 @@ class SkillOptimizer:
                     if hasattr(part, "text") and part.text:
                         text += part.text
         return text
+
+    def _raise_if_stopped(self) -> None:
+        if self._should_stop is not None and self._should_stop():
+            raise OptimizationStopped("Optimization stopped by request")
 
     async def _ask_json(self, agent: Agent, prompt: str, fallback=None):
         """Run an ADK agent and parse the JSON response."""
@@ -165,8 +176,14 @@ class SkillOptimizer:
         evals: list,
         max_rounds: int = 5,
         callback: Optional[Callable] = None,
+        should_stop: Optional[Callable[[], bool]] = None,
     ) -> dict:
-        """Run the optimization loop with 3 ADK agents."""
+        """Run the optimization loop with 3 ADK agents.
+
+        ``should_stop`` is checked before every model call; once it returns True
+        the loop raises OptimizationStopped instead of spending more requests.
+        """
+        self._should_stop = should_stop
 
         async def emit(event):
             if callback:
@@ -196,6 +213,7 @@ class SkillOptimizer:
 
         # -- Rounds -----------------------------------------------------------
         for rnd in range(1, max_rounds + 1):
+            self._raise_if_stopped()
             await emit({"type": "experiment_start", "data": {"round": rnd}})
 
             # Analyst diagnoses worst failure

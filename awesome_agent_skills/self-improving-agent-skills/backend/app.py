@@ -15,7 +15,7 @@ import shutil
 import re
 import logging
 import traceback
-from adk_optimizer import SkillOptimizer
+from adk_optimizer import OptimizationStopped, SkillOptimizer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -293,6 +293,11 @@ async def start_optimization(session_id: str, request: StartRequest):
 
     session["status"] = "running"
     session["stop_requested"] = False
+    session.pop("final_result", None)
+    # Each run gets its own stop signal so a stopped run can never write results
+    # into a later run of the same session.
+    stop_event = asyncio.Event()
+    session["stop_event"] = stop_event
     # Pre-create the event queue so events aren't lost before SSE connects
     session["event_queue"] = asyncio.Queue()
     gemini_key = request.gemini_api_key
@@ -302,6 +307,8 @@ async def start_optimization(session_id: str, request: StartRequest):
         optimizer = SkillOptimizer(api_key=gemini_key)
 
         async def callback(event):
+            if stop_event.is_set():
+                raise OptimizationStopped("Optimization stopped by request")
             logger.info("Callback event: %s", str(event["type"]).replace("\r", "\\r").replace("\n", "\\n").replace("\x00", "\\0").replace("\x1b", "\\x1b").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
             if "event_queue" in session:
                 await session["event_queue"].put(event)
@@ -360,6 +367,7 @@ async def start_optimization(session_id: str, request: StartRequest):
                 evals=session["evals"],
                 max_rounds=request.max_rounds,
                 callback=callback,
+                should_stop=stop_event.is_set,
             )
             logger.info(f"Optimization complete: {result['baseline_score']}% -> {result['final_score']}%")
             # Don't overwrite final_result if callback already set it with transformed data
@@ -389,6 +397,10 @@ async def start_optimization(session_id: str, request: StartRequest):
                 }
             session["current_skill_md"] = result["improved_skill_md"]
             session["status"] = "complete"
+        except (OptimizationStopped, asyncio.CancelledError):
+            logger.info("Optimization stopped for session %s", str(session_id).replace("\r", "\\r").replace("\n", "\\n"))
+            if session.get("stop_event") is stop_event:
+                session["status"] = "stopped"
         except Exception as e:
             logger.error(f"Optimization error: {traceback.format_exc()}")
             session["status"] = "error"
@@ -397,7 +409,7 @@ async def start_optimization(session_id: str, request: StartRequest):
                 await session["event_queue"].put({"type": "error", "data": {"message": str(e)}})
                 await session["event_queue"].put(None)
 
-    asyncio.create_task(run_optimization())
+    session["task"] = asyncio.create_task(run_optimization())
     return {"status": "started"}
 
 
@@ -409,6 +421,13 @@ async def stop_optimization(session_id: str):
     session = sessions[session_id]
     session["stop_requested"] = True
     session["status"] = "stopped"
+    stop_event = session.get("stop_event")
+    if stop_event is not None:
+        stop_event.set()
+    task = session.get("task")
+    if task is not None and not task.done():
+        # Cancel in-flight model calls too, not just the ones that have not started.
+        task.cancel()
     if "event_queue" in session:
         await session["event_queue"].put(None)
     return {"status": "stopped"}
