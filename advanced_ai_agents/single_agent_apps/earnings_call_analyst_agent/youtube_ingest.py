@@ -27,6 +27,38 @@ def _int_env(name: str, default: int, minimum: int, maximum: int) -> int:
 
 
 AUDIO_CHUNK_SECONDS = _int_env("EARNINGS_AUDIO_CHUNK_SECONDS", 300, minimum=60, maximum=900)
+# Aggregate budget for the audio fallback: longest video accepted, largest download
+# accepted, and the most ADK transcription calls one session may make.
+MAX_AUDIO_SECONDS = _int_env("EARNINGS_MAX_AUDIO_SECONDS", 3 * 60 * 60, minimum=60, maximum=12 * 60 * 60)
+MAX_AUDIO_BYTES = _int_env("EARNINGS_MAX_AUDIO_MB", 200, minimum=1, maximum=2048) * 1024 * 1024
+MAX_AUDIO_CHUNKS = -(-MAX_AUDIO_SECONDS // AUDIO_CHUNK_SECONDS) + 1
+FFMPEG_TIMEOUT_SECONDS = _int_env("EARNINGS_FFMPEG_TIMEOUT_SECONDS", 600, minimum=10, maximum=3600)
+
+
+def enforce_audio_duration_budget(info: dict) -> None:
+    """Reject live streams and videos whose duration is unknown or above the budget."""
+    if info.get("is_live") or info.get("_type") == "playlist":
+        raise RuntimeError("Audio fallback only supports a single finished video, not live streams or playlists.")
+    try:
+        duration = float(info.get("duration") or 0)
+    except (TypeError, ValueError):
+        duration = 0
+    if duration <= 0:
+        raise RuntimeError("Audio fallback requires a video with a known duration.")
+    if duration > MAX_AUDIO_SECONDS:
+        raise RuntimeError(
+            f"Video is {int(duration)} seconds long; audio fallback is limited to {MAX_AUDIO_SECONDS} seconds."
+        )
+
+
+def enforce_audio_chunk_budget(audio_chunks: list[Path]) -> None:
+    if len(audio_chunks) > MAX_AUDIO_CHUNKS:
+        raise RuntimeError(
+            f"Audio produced {len(audio_chunks)} chunks; the transcription budget is {MAX_AUDIO_CHUNKS}."
+        )
+    total_bytes = sum(path.stat().st_size for path in audio_chunks)
+    if total_bytes > MAX_AUDIO_BYTES:
+        raise RuntimeError("Audio exceeds the configured transcription byte budget.")
 
 
 try:
@@ -174,18 +206,24 @@ def transcribe_audio_with_adk(
             "quiet": True,
             "no_warnings": True,
             "noprogress": True,
+            "max_filesize": MAX_AUDIO_BYTES,
         }
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
         with YoutubeDL(ydl_opts) as ydl:
-            ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=True)
+            enforce_audio_duration_budget(ydl.extract_info(video_url, download=False) or {})
+            ydl.extract_info(video_url, download=True)
 
         audio_files = [path for path in Path(temp_dir).iterdir() if path.is_file()]
         if not audio_files:
             raise RuntimeError("yt-dlp did not produce an audio file.")
 
         audio_path = max(audio_files, key=lambda path: path.stat().st_size)
+        if audio_path.stat().st_size > MAX_AUDIO_BYTES:
+            raise RuntimeError("Downloaded audio exceeds the configured transcription byte budget.")
         audio_chunks = _prepare_audio_chunks(audio_path, Path(temp_dir))
         if not audio_chunks:
             audio_chunks = [audio_path]
+        enforce_audio_chunk_budget(audio_chunks)
 
         segments: list[TranscriptSegment] = []
         for index, chunk_path in enumerate(audio_chunks):
@@ -331,7 +369,15 @@ def _prepare_audio_chunks(audio_path: Path, temp_dir: Path) -> list[Path]:
         "1",
         str(output_pattern),
     ]
-    result = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=FFMPEG_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("ffmpeg audio segmentation exceeded its time budget.") from exc
     if result.returncode != 0:
         return [audio_path]
 
