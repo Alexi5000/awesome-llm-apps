@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSessionUserId, unauthorizedResponse } from '@/lib/session';
 
 export async function GET() {
   try {
+    const userId = await getSessionUserId();
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const tripPlans = await prisma.tripPlan.findMany({
+      where: { userId },
       orderBy: {
         createdAt: 'desc'
       }

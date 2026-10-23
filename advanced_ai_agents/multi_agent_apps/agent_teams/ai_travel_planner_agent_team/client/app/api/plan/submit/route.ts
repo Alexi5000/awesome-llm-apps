@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { backendHeaders, getSessionUserId, unauthorizedResponse } from '@/lib/session';
 
 interface TripFormData {
   name: string;
@@ -28,6 +29,11 @@ interface TripFormData {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getSessionUserId();
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const tripData: TripFormData = await request.json();
 
     // Log the trip data for debugging
@@ -70,8 +76,8 @@ export async function POST(request: NextRequest) {
         beenThereBefore: tripData.beenThereBefore || null,
         lovedPlaces: tripData.lovedPlaces || null,
         additionalInfo: tripData.additionalInfo || null,
-        // userId can be added later when auth is implemented
-        userId: null
+        // Bind the plan to the signed-in creator so only they can read, retry or delete it
+        userId
       }
     });
 
@@ -113,9 +119,7 @@ export async function POST(request: NextRequest) {
     // Call backend API to trigger trip planning
     const backendResponse = await fetch(`${process.env.BACKEND_API_URL}/api/plan/trigger`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: backendHeaders(),
       body: JSON.stringify(requestBody)
     });
 

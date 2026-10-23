@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { backendHeaders, getSessionUserId, unauthorizedResponse } from '@/lib/session';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Set only after ownership is verified, so the error path never touches other users' plans
+  let ownedPlanId: string | null = null;
   try {
+    const userId = await getSessionUserId();
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const { id } = await params;
 
-    // First check if the plan exists
-    const tripPlan = await prisma.tripPlan.findUnique({
-      where: { id },
+    // First check if the plan exists and belongs to the caller
+    const tripPlan = await prisma.tripPlan.findFirst({
+      where: { id, userId },
       include: {
         status: true,
         output: true,
@@ -26,6 +34,8 @@ export async function POST(
         { status: 404 }
       );
     }
+
+    ownedPlanId = tripPlan.id;
 
     // Update the status to pending/processing
     await prisma.tripPlanStatus.upsert({
@@ -76,9 +86,7 @@ export async function POST(
     // Call backend API to trigger trip planning again
     const backendResponse = await fetch(`${process.env.BACKEND_API_URL}/api/plan/trigger`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: backendHeaders(),
       body: JSON.stringify(requestBody)
     });
 
@@ -118,13 +126,15 @@ export async function POST(
 
     // Ensure we update the status to failed if there's an error
     try {
-      await prisma.tripPlanStatus.update({
-        where: { tripPlanId: (await params).id },
-        data: {
-          status: 'failed',
-          currentStep: 'Error occurred while retrying',
-        },
-      });
+      if (ownedPlanId) {
+        await prisma.tripPlanStatus.update({
+          where: { tripPlanId: ownedPlanId },
+          data: {
+            status: 'failed',
+            currentStep: 'Error occurred while retrying',
+          },
+        });
+      }
     } catch (statusError) {
       console.error('Failed to update status after error:', statusError);
     }

@@ -1,11 +1,12 @@
 import asyncio
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from loguru import logger
 from models.travel_plan import TravelPlanAgentRequest, TravelPlanResponse
 from models.plan_task import TaskStatus
 from services.plan_service import generate_travel_plan
 from repository.plan_task_repository import create_plan_task, update_task_status
 from typing import List
+from api.internal_auth import require_internal_caller
 
 router = APIRouter(prefix="/api/plan", tags=["Travel Plan"])
 
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/api/plan", tags=["Travel Plan"])
     response_model=TravelPlanResponse,
     summary="Trigger Trip Craft Agent",
     description="Triggers the travel plan agent with the provided travel details",
+    dependencies=[Depends(require_internal_caller)],
 )
 async def trigger_trip_craft_agent(
     request: TravelPlanAgentRequest,
