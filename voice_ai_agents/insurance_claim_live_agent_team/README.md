@@ -127,3 +127,5 @@ http://127.0.0.1:4177/index.html
 ```
 
 Use the microphone button to start a live claim conversation, or type into the text box if microphone access is unavailable.
+
+The live WebSocket (`/ws/live`) only accepts browser handshakes whose `Origin` is in the allowlist, because each connection opens a Gemini Live session on the operator's key. The default allowlist is `http://127.0.0.1:4177,http://localhost:4177`. If you serve the UI from another host or port, set `FNOL_WS_ORIGINS` (comma separated); otherwise it falls back to `FNOL_CORS_ORIGINS`.

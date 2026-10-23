@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSessionUserId, unauthorizedResponse } from '@/lib/session';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getSessionUserId();
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const { id } = await params;
 
-    const tripPlan = await prisma.tripPlan.findUnique({
-      where: { id },
+    // Only the owner can read a plan; other callers get the same 404 as a missing plan
+    const tripPlan = await prisma.tripPlan.findFirst({
+      where: { id, userId },
       include: {
         status: true,
         output: true,
@@ -50,11 +57,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getSessionUserId();
+    if (!userId) {
+      return unauthorizedResponse();
+    }
+
     const { id } = await params;
 
-    // First check if the plan exists
-    const tripPlan = await prisma.tripPlan.findUnique({
-      where: { id },
+    // First check if the plan exists and belongs to the caller
+    const tripPlan = await prisma.tripPlan.findFirst({
+      where: { id, userId },
     });
 
     if (!tripPlan) {

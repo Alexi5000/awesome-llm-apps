@@ -69,8 +69,40 @@ class RuntimeSession:
     diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
+def _bounded_env_int(name: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)) or str(default))
+    except ValueError:
+        value = default
+    return max(minimum, min(maximum, value))
+
+
+# Shared-resource budget: every session spends operator provider credentials, so cap
+# how many run at once and how many finished sessions stay in memory.
+MAX_ACTIVE_SESSIONS = _bounded_env_int("EARNINGS_MAX_ACTIVE_SESSIONS", 2, minimum=1, maximum=32)
+MAX_RETAINED_SESSIONS = _bounded_env_int("EARNINGS_MAX_RETAINED_SESSIONS", 50, minimum=1, maximum=1000)
+ACTIVE_STATUSES = {"queued", "metadata", "transcript", "research", "analysis"}
+
 sessions: dict[str, RuntimeSession] = {}
 session_lock = asyncio.Lock()
+
+
+def _admit_session(runtime: RuntimeSession) -> None:
+    """Insert a session if the active and retained budgets allow it. Caller holds session_lock."""
+    active = sum(1 for item in sessions.values() if item.status in ACTIVE_STATUSES)
+    if active >= MAX_ACTIVE_SESSIONS:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many analyses are running. Wait for one to finish and try again.",
+        )
+    while len(sessions) >= MAX_RETAINED_SESSIONS:
+        finished = next(
+            (key for key, item in sessions.items() if item.status not in ACTIVE_STATUSES), None
+        )
+        if finished is None:
+            raise HTTPException(status_code=429, detail="Session capacity reached. Try again later.")
+        del sessions[finished]
+    sessions[runtime.session_id] = runtime
 
 app = FastAPI(title="📡 Earnings Call Analyst Agent")
 app.add_middleware(
@@ -109,7 +141,7 @@ async def create_session(request: SessionRequest, background_tasks: BackgroundTa
     session_id = uuid.uuid4().hex[:12]
     runtime = RuntimeSession(session_id=session_id, youtube_url=request.youtube_url)
     async with session_lock:
-        sessions[session_id] = runtime
+        _admit_session(runtime)
     background_tasks.add_task(_run_session, session_id)
     return SessionCreated(session_id=session_id)
 
@@ -133,7 +165,9 @@ async def get_session(session_id: str) -> dict[str, Any]:
 
 
 async def _run_session(session_id: str) -> None:
-    runtime = sessions[session_id]
+    runtime = sessions.get(session_id)
+    if runtime is None:
+        return
     try:
         await _set_status(runtime, "metadata", 10, "Resolving YouTube video")
         video_id = extract_video_id(runtime.youtube_url)

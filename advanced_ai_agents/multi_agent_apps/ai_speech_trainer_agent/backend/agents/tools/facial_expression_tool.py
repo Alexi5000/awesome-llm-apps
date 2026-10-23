@@ -4,6 +4,7 @@ import mediapipe as mp
 from deepface import DeepFace
 from agno.tools import tool
 import json
+from agents.tools.media_paths import resolve_upload_media
 
 def log_before_call(fc):
     """Pre-hook function that runs before the tool execution"""
@@ -34,6 +35,11 @@ def analyze_facial_expressions(video_path: str) -> dict:
     Returns:
         A dictionary containing the emotion timeline and engagement metrics.
     """
+    # The model chooses this argument, so re-check upload containment here.
+    try:
+        video_path = resolve_upload_media(video_path)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
     mp_face_mesh = mp.solutions.face_mesh
     face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1)
     cap = cv2.VideoCapture(video_path)

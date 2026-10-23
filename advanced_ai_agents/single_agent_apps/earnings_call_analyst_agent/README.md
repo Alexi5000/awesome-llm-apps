@@ -89,3 +89,12 @@ http://127.0.0.1:4188
 ```
 
 Paste a YouTube earnings call URL. The app builds the research pack first, then reveals analyst cards as the video reaches each quote.
+
+### Resource budget
+
+Every analysis spends the operator's Google credentials, so the server enforces a shared budget:
+
+- `EARNINGS_MAX_ACTIVE_SESSIONS` (default 2): concurrent analyses; extra requests get HTTP 429.
+- `EARNINGS_MAX_RETAINED_SESSIONS` (default 50): finished sessions kept in memory; the oldest finished ones are evicted first.
+- `EARNINGS_MAX_AUDIO_SECONDS` (default 10800) and `EARNINGS_MAX_AUDIO_MB` (default 200): longest and largest video the audio fallback will download. Live streams and unknown durations are rejected.
+- The number of ADK transcription calls per session is capped at `ceil(EARNINGS_MAX_AUDIO_SECONDS / EARNINGS_AUDIO_CHUNK_SECONDS) + 1`, and ffmpeg segmentation stops after `EARNINGS_FFMPEG_TIMEOUT_SECONDS`.

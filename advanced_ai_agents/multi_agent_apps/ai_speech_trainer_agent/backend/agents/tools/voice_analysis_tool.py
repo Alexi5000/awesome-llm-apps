@@ -7,6 +7,7 @@ from moviepy import VideoFileClip
 from faster_whisper import WhisperModel
 from agno.tools import tool
 from dotenv import load_dotenv
+from agents.tools.media_paths import resolve_upload_media
 
 load_dotenv()
 
@@ -89,6 +90,12 @@ def analyze_voice_attributes(file_path: str) -> dict:
     Returns:
         A dictionary containing the transcribed text, speech rate, pitch variation, and volume consistency.
     """
+
+    # The model chooses this argument, so re-check upload containment here.
+    try:
+        file_path = resolve_upload_media(file_path)
+    except ValueError as exc:
+        return json.dumps({"error": str(exc)})
 
     # Determine file extension
     _, ext = os.path.splitext(file_path)

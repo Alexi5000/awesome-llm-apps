@@ -68,6 +68,12 @@ python server.py
 
 Backend runs on `http://localhost:8890`.
 
+Ingestion budget (every frame is a Gemini embedding on your key):
+
+- `fps` sent to `/upload-video` is clamped to `VIDEO_MAX_FPS` (default 2); zero, negative and non-finite values are rejected.
+- At most `VIDEO_MAX_FRAMES` frames (default 600) are extracted and embedded per video, and ffmpeg stops after `VIDEO_FFMPEG_TIMEOUT_SECONDS` (default 300).
+- Uploads are capped at 100MB, must use a common video extension (`.mp4`, `.mov`, `.webm`, `.mkv`, `.avi`, ...), and are stored under a random name in `uploads/`. The original filename is kept only as display metadata.
+
 ### Frontend
 
 ```bash

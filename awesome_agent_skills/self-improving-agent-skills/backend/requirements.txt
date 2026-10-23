@@ -1,6 +1,6 @@
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 google-genai>=1.0.0
-google-adk>=1.0.0
+google-adk>=2.4.0  # Gemini(client_kwargs=...) binds the caller key per optimizer
 pydantic>=2.0.0
 python-multipart>=0.0.18

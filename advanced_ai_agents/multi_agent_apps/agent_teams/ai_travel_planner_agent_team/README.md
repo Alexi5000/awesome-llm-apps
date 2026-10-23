@@ -68,3 +68,10 @@ Six specialized agents work together to create comprehensive travel plans:
 4. **💰 Budget Agent** - Handles cost optimization and financial planning
 5. **✈️ Flight Search Agent** - Plans air travel routes and comparisons
 6. **📅 Itinerary Specialist** - Creates detailed day-by-day schedules with optimal timing
+
+---
+
+## 🔐 Access control
+
+- Plans belong to the signed-in user who submitted them (better-auth session). `GET /api/plans` lists only the caller's plans, and `GET`/`DELETE /api/plans/[id]` plus `POST /api/plans/[id]/retry` return 404 for plans owned by someone else. Unauthenticated API calls return 401.
+- The FastAPI `POST /api/plan/trigger` endpoint is meant to be called only by the Next.js server. Set the same random value for `TRIPCRAFT_INTERNAL_API_TOKEN` in `backend/.env` and `client/.env.local`; the client sends it as `X-TripCraft-Internal-Token`. If the variable is unset, the backend accepts loopback callers only, which keeps local development working.

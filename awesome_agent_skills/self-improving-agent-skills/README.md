@@ -187,7 +187,7 @@ For each round, the three agents collaborate:
 | `POST` | `/api/update-config` | Save user's selected/edited config |
 | `POST` | `/api/start/{session_id}` | Start optimization |
 | `GET` | `/api/stream/{session_id}` | SSE stream of optimization progress |
-| `POST` | `/api/stop/{session_id}` | Stop optimization |
+| `POST` | `/api/stop/{session_id}` | Stop optimization (cancels the running task; no further Gemini calls are made) |
 | `GET` | `/api/download/{session_id}` | Download improved skill |
 | `GET` | `/api/examples` | List available example skills |
 | `POST` | `/api/examples/{name}/load` | Load an example skill |
@@ -210,7 +210,7 @@ Sessions expire after **1 hour** automatically.
 
 ### Frontend
 
-API key is entered in the UI, stored in component state (not persisted), and sent with each request. The key is passed to the backend which sets `GOOGLE_API_KEY` for ADK agent authentication.
+API key is entered in the UI, stored in component state (not persisted), and sent with each request. The backend binds the key to that session's own Gemini client (`Gemini(client_kwargs={"api_key": ...})`, google-adk 2.4 or newer) and never writes it to the process-wide `GOOGLE_API_KEY`, so concurrent sessions cannot use each other's keys.
 
 ### Optimization Parameters
 

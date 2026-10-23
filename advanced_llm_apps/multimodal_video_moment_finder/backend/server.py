@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
 
+from ingest_limits import MAX_UPLOAD_BYTES, clamp_fps, display_filename, stored_upload_path
 from video_store import VideoStore
 
 app = FastAPI(title="Multimodal Video Moment Finder")
@@ -55,19 +56,31 @@ async def upload_video(
     fps: float = Form(1.0),
 ):
     """Upload and process a video. Extracts frames and embeds each one."""
-    data = await file.read()
-    if len(data) > 100 * 1024 * 1024:  # 100MB limit
+    try:
+        fps = clamp_fps(fps)
+        # The client filename is display metadata only; storage uses a random contained name
+        video_path = stored_upload_path(uploads_dir, file.filename)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    filename = display_filename(file.filename)
+
+    data = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(400, "Video too large (100MB max)")
 
     # Save video
-    video_path = uploads_dir / f"{file.filename}"
-    with open(video_path, "wb") as f:
+    with open(video_path, "xb") as f:
         f.write(data)
 
     # Process
-    result = store.ingest_video(str(video_path), file.filename, fps=fps)
+    try:
+        result = store.ingest_video(str(video_path), filename, fps=fps, stored_filename=video_path.name)
+    except Exception:
+        video_path.unlink(missing_ok=True)
+        raise
 
     if "error" in result:
+        video_path.unlink(missing_ok=True)
         raise HTTPException(500, result["error"])
 
     return result
@@ -131,7 +144,7 @@ async def list_videos():
     videos = store.list_videos()
     # Add video URLs
     for v in videos:
-        v["video_url"] = f"/uploads/{v['filename']}"
+        v["video_url"] = f"/uploads/{v.get('stored_filename') or v['filename']}"
     return {"videos": videos}
 
 
