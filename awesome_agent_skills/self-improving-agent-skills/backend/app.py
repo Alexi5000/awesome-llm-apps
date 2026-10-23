@@ -126,14 +126,15 @@ async def upload_skill(file: UploadFile = File(...)):
     """Accept zip file or multiple files, extract, return file list + parsed SKILL.md metadata"""
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Only .zip files are accepted")
-    content = await file.read()
+    content = await file.read(MAX_UPLOAD_SIZE + 1)
     if len(content) > MAX_UPLOAD_SIZE:
         raise HTTPException(status_code=413, detail=f"Upload exceeds {MAX_UPLOAD_SIZE // (1024*1024)}MB limit")
     try:
         with zipfile.ZipFile(io.BytesIO(content)) as zf:
             skill_files = {}
             file_list = []
-            for name in zf.namelist():
+            for entry in zf.infolist():
+                name = entry.filename
                 if name.endswith("/") or name.startswith("__MACOSX") or "/.DS_Store" in name or name.endswith(".DS_Store"):
                     continue
                 if not _is_safe_path(name):
@@ -142,13 +143,17 @@ async def upload_skill(file: UploadFile = File(...)):
                 if not _is_allowed_file(name):
                     logger.info(f"Skipping non-text file: {name}")
                     continue
-                raw = zf.read(name)
-                if len(raw) > MAX_FILE_SIZE:
-                    logger.warning(f"Skipping oversized file: {name} ({len(raw)} bytes)")
-                    continue
                 if len(file_list) >= MAX_FILE_COUNT:
                     logger.warning("Max file count reached, skipping remaining entries")
                     break
+                if entry.file_size > MAX_FILE_SIZE:
+                    logger.warning("Skipping oversized zip member")
+                    continue
+                with zf.open(entry) as member:
+                    raw = member.read(MAX_FILE_SIZE + 1)
+                if len(raw) > MAX_FILE_SIZE:
+                    logger.warning("Skipping oversized zip member")
+                    continue
                 file_content = raw.decode("utf-8", errors="ignore")
                 skill_files[name] = file_content
                 file_list.append(name)
