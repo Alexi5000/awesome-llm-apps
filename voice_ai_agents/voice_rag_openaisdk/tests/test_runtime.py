@@ -21,7 +21,8 @@ spec.loader.exec_module(app)
 
 
 class Embeddings:
-    def embed(self, texts):
+    def encode(self, texts, *, normalize_embeddings):
+        assert normalize_embeddings is True
         return [np.array([1.0, 0.0, 0.0]) for _ in texts]
 
 
