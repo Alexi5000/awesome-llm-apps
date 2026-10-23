@@ -35,7 +35,7 @@ def process_text(text: str, operation: str) -> Dict[str, Union[str, int]]:
             "reverse": lambda t: {"result": t[::-1], "original": t},
             "remove_spaces": lambda t: {"result": re.sub(r'\s+', '', t), "original": t},
             "extract_emails": lambda t: {"emails": re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', t), "original": t},
-            "extract_urls": lambda t: {"urls": re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', t), "original": t},
+            "extract_urls": lambda t: {"urls": re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$_@.&+:/?#=~-]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', t), "original": t},
             "word_frequency": lambda t: {"word_frequency": dict(sorted([(word.lower(), t.lower().split().count(word.lower())) for word in set(t.split())], key=lambda x: x[1], reverse=True)), "original": t}
         }
         

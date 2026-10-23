@@ -89,10 +89,10 @@ class PodcastAgentService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
                     "session_id": request.session_id,
-                    "response": f"I encountered an error while processing your request: {str(e)}. Please try again.",
+                    "response": "I encountered an error while processing your request. Please try again.",
                     "stage": "error",
                     "session_state": "{}",
-                    "error": str(e),
+                    "error": "Request processing failed",
                     "is_processing": False,
                 },
             )
@@ -113,6 +113,7 @@ class PodcastAgentService:
             return None
 
     async def check_result_status(self, request):
+        browser_recording_path = None
         try:
             if not request.session_id:
                 return JSONResponse(
@@ -150,7 +151,7 @@ class PodcastAgentService:
                             }
                         return result
                 else:
-                    error_info = str(task.result) if task.result else f"Task failed with state: {task.state}"
+                    error_info = "The background task failed. Please try again."
                     return {
                         "session_id": request.session_id,
                         "response": f"Error processing request: {error_info}",
@@ -164,9 +165,9 @@ class PodcastAgentService:
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
-                    "error": f"Error checking result status: {str(e)}",
+                    "error": "Error checking result status",
                     "session_id": request.session_id,
-                    "response": f"Error checking result status: {str(e)}",
+                    "response": "Error checking result status",
                     "stage": "error",
                     "session_state": "{}",
                     "is_processing": False,
@@ -202,7 +203,7 @@ class PodcastAgentService:
         except Exception as e:
             return {
                 "session_id": session_id,
-                "response": f"Error retrieving session state: {str(e)}",
+                "response": "Error retrieving session state",
                 "stage": "error",
                 "session_state": "{}",
                 "is_processing": False,
@@ -260,7 +261,7 @@ class PodcastAgentService:
             }
         except Exception as e:
             print(f"Error listing sessions: {e}")
-            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": f"Failed to list sessions: {str(e)}"})
+            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": "Failed to list sessions"})
 
     async def delete_session(self, session_id: str):
         try:
@@ -316,10 +317,10 @@ class PodcastAgentService:
                         return {"success": True, "message": f"Session {session_id} and its associated data deleted successfully"}
                 except Exception as e:
                     print(f"Error parsing session data for deletion: {e}")
-                    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": f"Error deleting session: {str(e)}"})
+                    return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": "Error deleting session"})
         except Exception as e:
             print(f"Error deleting session: {e}")
-            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": f"Failed to delete session: {str(e)}"})
+            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": "Failed to delete session"})
 
     async def _get_chat_messages(self, row, session_id):
         formatted_messages = []
@@ -384,7 +385,7 @@ class PodcastAgentService:
                 "browser_recording_path": browser_recording_path,
             }
         except Exception as e:
-            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": f"Error retrieving session history: {str(e)}"})
+            return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": "Error retrieving session history"})
 
     async def get_supported_languages(self):
         return {"languages": AVAILABLE_LANGS}

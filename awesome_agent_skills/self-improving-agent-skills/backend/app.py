@@ -293,11 +293,11 @@ async def start_optimization(session_id: str, request: StartRequest):
     gemini_key = request.gemini_api_key
 
     async def run_optimization():
-        logger.info(f"Starting optimization for session {session_id}")
+        logger.info("Starting optimization for session %s", json.dumps(session_id))
         optimizer = SkillOptimizer(api_key=gemini_key)
 
         async def callback(event):
-            logger.info(f"Callback event: {event['type']}")
+            logger.info("Callback event: %s", json.dumps(event["type"]))
             if "event_queue" in session:
                 await session["event_queue"].put(event)
             if event["type"] == "baseline":
