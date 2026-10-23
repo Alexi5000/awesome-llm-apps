@@ -101,6 +101,24 @@ class SourceBoundaryTests(unittest.TestCase):
         agent.AsyncResult.return_value = SimpleNamespace(state="SUCCESS", result=expected)
         self.assertEqual(asyncio.run(service.check_result_status(request)), expected)
 
+    def test_optimizer_logs_escape_control_characters(self):
+        import logging
+        tree = ast.parse((ROOT / "awesome_agent_skills/self-improving-agent-skills/backend/app.py").read_text())
+        calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                 and isinstance(node.func, ast.Attribute) and node.func.attr == "info"
+                 and node.args and isinstance(node.args[0], ast.Constant)
+                 and str(node.args[0].value).startswith(("Starting optimization for session", "Callback event:"))]
+        logger = Mock()
+        scope = {"logger": logger, "session_id": "abc\r\nFORGED\x1b[31m",
+                 "event": {"type": "done\r\nFORGED\x1b[31m"}, "json": json}
+        for call in calls:
+            exec(compile(ast.fix_missing_locations(ast.Module(body=[ast.Expr(value=call)], type_ignores=[])), "log_sink", "exec"), scope)
+            args = logger.info.call_args.args
+            message = logging.LogRecord("test", 20, "", 0, args[0], args[1:], None).getMessage()
+            for control in ("\r", "\n", "\x1b"):
+                self.assertNotIn(control, message)
+            self.assertIn("FORGED", message)
+
     def test_url_extractors_keep_queries_but_stop_at_markup(self):
         paths = [
             "ai_agent_framework_crash_course/google_adk_crash_course/4_tool_using_agent/4_2_function_tools/utility_agent/tools.py",
