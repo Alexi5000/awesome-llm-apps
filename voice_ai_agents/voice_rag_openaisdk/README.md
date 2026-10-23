@@ -50,7 +50,7 @@ streamlit run rag_voice.py
 1. **Document Processing:** 
    - Upload PDF documents through the Streamlit interface
    - Documents are split into chunks using LangChain's RecursiveCharacterTextSplitter
-   - Each chunk is embedded using FastEmbed and stored in Qdrant
+   - Each chunk is embedded locally on CPU using SentenceTransformers and BAAI/bge-small-en-v1.5, normalized, and stored in Qdrant
 
 2. **Query Processing:**
    - User questions are converted to embeddings
@@ -72,4 +72,10 @@ streamlit run rag_voice.py
 
 ### Offline compatibility checks
 
-Run `python -m unittest discover -s tests -v`. Tests cover real PDF parsing, local Qdrant storage/retrieval, agent construction, OpenAI audio request serialization, empty retrieval, and initial UI rendering. Model inference and physical audio playback are mocked; live credentials, embedding model downloads and a working audio device are still required for the complete voice workflow. Linux local playback may require the system PortAudio library.
+Run `python -m unittest discover -s tests -v`. Tests cover real PDF parsing, local Qdrant storage/retrieval, agent construction, OpenAI audio request serialization, empty retrieval, and initial UI rendering. A tiny locally created Transformer exercises real CPU embedding inference, normalized vectors, Qdrant retrieval and preservation of the legacy collection without model downloads. Provider calls and physical audio playback are mocked; live credentials, the public BGE model download and a working audio device are still required for the complete voice workflow. Linux local playback may require the system PortAudio library.
+
+### Embedding dependency migration
+
+This revision uses SentenceTransformers instead of FastEmbed so the environment can use security-patched Pillow 13 without overriding another package's compatibility bounds. Python 3.12 remains the supported setup. The first initialization downloads the public BAAI/bge-small-en-v1.5 model; no embedding API credential is required. GPU acceleration is not required.
+
+The application now uses the separate `voice-rag-agent-bge-st-v1` collection to prevent mixing embeddings produced by different runtimes. The original `voice-rag-agent` collection is not deleted or modified. Re-upload your PDFs in the updated app to populate its new collection before querying.

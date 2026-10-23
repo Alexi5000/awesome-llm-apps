@@ -12,7 +12,7 @@ from qdrant_client.http import models
 from qdrant_client.http.models import Distance, VectorParams
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from fastembed import TextEmbedding
+from sentence_transformers import SentenceTransformer
 from openai import AsyncOpenAI
 from openai.helpers import LocalAudioPlayer
 from agents import Agent, Runner
@@ -20,7 +20,9 @@ from agents import Agent, Runner
 load_dotenv()
 
 # Constants
-COLLECTION_NAME = "voice-rag-agent"
+COLLECTION_NAME = "voice-rag-agent-bge-st-v1"
+EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"
+EMBEDDING_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
 
 def init_session_state() -> None:
     """Initialize Streamlit session state with default values."""
@@ -74,7 +76,7 @@ def setup_sidebar() -> None:
             help="Choose the voice for the audio response"
         )
 
-def setup_qdrant() -> Tuple[QdrantClient, TextEmbedding]:
+def setup_qdrant() -> Tuple[QdrantClient, SentenceTransformer]:
     """Initialize Qdrant client and embedding model."""
     if not all([st.session_state.qdrant_url, st.session_state.qdrant_api_key]):
         raise ValueError("Qdrant credentials not provided")
@@ -84,8 +86,8 @@ def setup_qdrant() -> Tuple[QdrantClient, TextEmbedding]:
         api_key=st.session_state.qdrant_api_key
     )
     
-    embedding_model = TextEmbedding()
-    test_embedding = list(embedding_model.embed(["test"]))[0]
+    embedding_model = SentenceTransformer(EMBEDDING_MODEL, revision=EMBEDDING_REVISION, device="cpu", trust_remote_code=False)
+    test_embedding = embedding_model.encode(["test"], normalize_embeddings=True)[0]
     embedding_dim = len(test_embedding)
     
     try:
@@ -130,13 +132,13 @@ def process_pdf(file) -> List:
 
 def store_embeddings(
     client: QdrantClient,
-    embedding_model: TextEmbedding,
+    embedding_model: SentenceTransformer,
     documents: List,
     collection_name: str
 ) -> None:
     """Store document embeddings in Qdrant."""
     for doc in documents:
-        embedding = list(embedding_model.embed([doc.page_content]))[0]
+        embedding = embedding_model.encode([doc.page_content], normalize_embeddings=True)[0]
         client.upsert(
             collection_name=collection_name,
             points=[
@@ -184,7 +186,7 @@ def setup_agents(openai_api_key: str) -> Tuple[Agent, Agent]:
 async def process_query(
     query: str,
     client: QdrantClient,
-    embedding_model: TextEmbedding,
+    embedding_model: SentenceTransformer,
     collection_name: str,
     openai_api_key: str,
     voice: str
@@ -193,7 +195,7 @@ async def process_query(
     try:
         st.info("🔄 Step 1: Generating query embedding and searching documents...")
         # Get query embedding and search
-        query_embedding = list(embedding_model.embed([query]))[0]
+        query_embedding = embedding_model.encode([query], normalize_embeddings=True)[0]
         st.write(f"Generated embedding of size: {len(query_embedding)}")
         
         search_response = client.query_points(
