@@ -32,3 +32,4 @@ jobs:
       - run: uv pip install --python .venv/bin/python clickhouse-connect==1.11.0
       - run: uv pip check --python .venv/bin/python
       - run: .venv/bin/python -m unittest discover -s tests -p test_dependency_runtime.py -v
+      - run: .venv/bin/python -m unittest discover -s tests -p test_input_boundaries.py -v

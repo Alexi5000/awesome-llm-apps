@@ -6,6 +6,7 @@ from browser_use import Agent as BrowserAgent, Controller, BrowserSession, Brows
 from browser_use import ChatOpenAI
 from dotenv import load_dotenv
 from agno.agent import Agent
+from services.safe_paths import media_path
 
 
 import json
@@ -42,7 +43,7 @@ def run_browser_search(agent: Agent, instruction: str) -> str:
     try:
         controller = Controller(output_model=WebSearchResults)
         session_id = agent.session_id
-        recordings_dir = os.path.join("podcasts/recordings", session_id)
+        recordings_dir = media_path("podcasts/recordings", session_id)
         os.makedirs(recordings_dir, exist_ok=True)
 
         headless = True
