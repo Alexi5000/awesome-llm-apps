@@ -19,6 +19,8 @@ import chromadb
 from google import genai
 from google.genai import types
 
+from ingest_limits import FFMPEG_TIMEOUT_SECONDS, FFPROBE_TIMEOUT_SECONDS, MAX_FRAMES, clamp_fps
+
 MAX_IMAGE_DIMENSION = 1024  # Max width/height for embedding
 
 GEMINI_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
@@ -85,24 +87,32 @@ class VideoStore:
         output_dir = self.frames_dir / video_id
         output_dir.mkdir(exist_ok=True)
 
+        fps = clamp_fps(fps)
+
         # Get video duration
         result = subprocess.run(
             ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
              "-of", "csv=p=0", video_path],
-            capture_output=True, text=True,
+            capture_output=True, text=True, timeout=FFPROBE_TIMEOUT_SECONDS,
         )
-        duration = float(result.stdout.strip()) if result.stdout.strip() else 0
+        try:
+            duration = float(result.stdout.strip()) if result.stdout.strip() else 0
+        except ValueError:
+            duration = 0
 
-        # Extract frames
-        subprocess.run(
-            ["ffmpeg", "-i", video_path, "-vf", f"fps={fps}",
-             "-q:v", "2", str(output_dir / "frame_%04d.jpg"), "-y"],
-            capture_output=True,
-        )
+        # Extract frames, never more than the MAX_FRAMES budget
+        try:
+            subprocess.run(
+                ["ffmpeg", "-i", video_path, "-vf", f"fps={fps}", "-frames:v", str(MAX_FRAMES),
+                 "-q:v", "2", str(output_dir / "frame_%04d.jpg"), "-y"],
+                capture_output=True, timeout=FFMPEG_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            pass  # keep whatever frames were written before the time budget ran out
 
         # Collect frame info
         frames = []
-        for frame_file in sorted(output_dir.glob("frame_*.jpg")):
+        for frame_file in sorted(output_dir.glob("frame_*.jpg"))[:MAX_FRAMES]:
             frame_num = int(frame_file.stem.split("_")[1])
             timestamp = (frame_num - 1) / fps  # 0-indexed
             frames.append({
@@ -120,9 +130,12 @@ class VideoStore:
         filename: str,
         fps: float = 1.0,
         on_progress=None,
+        stored_filename: str = "",
     ) -> dict:
         """Ingest a video: extract frames, embed each, store in ChromaDB."""
+        fps = clamp_fps(fps)
         frames, duration, video_id = self.extract_frames(video_path, fps)
+        frames = frames[:MAX_FRAMES]  # embedding budget: at most MAX_FRAMES frames per video
 
         if not frames:
             return {"error": "No frames extracted", "video_id": video_id}
@@ -160,6 +173,7 @@ class VideoStore:
             metadatas.append({
                 "video_id": video_id,
                 "video_filename": filename,
+                "stored_filename": stored_filename,
                 "timestamp": frame["timestamp"],
                 "frame_num": frame["frame_num"],
                 "frame_path": frame["path"],
@@ -278,6 +292,7 @@ class VideoStore:
                 videos[vid] = {
                     "video_id": vid,
                     "filename": meta["video_filename"],
+                    "stored_filename": meta.get("stored_filename", ""),
                     "duration": meta["duration"],
                     "total_frames": meta["total_frames"],
                     "fps": meta["fps"],
