@@ -101,6 +101,8 @@ Navigate to the **backend** folder and run the following command:
 uvicorn main:app --reload
 ```
 
+Uploaded videos are saved to, and analyzed only from, `SPEECH_TRAINER_UPLOAD_DIR` (default: `<system temp>/ai_speech_trainer_uploads`). The `/analyze` endpoint and the voice and facial analysis tools reject any path outside that directory, symlinks, and non-media files. If you set the variable, set the same value for both the backend and the frontend.
+
 ### 5. Run the app
 Navigate to the **frontend** folder and run the following command:
 ```sh

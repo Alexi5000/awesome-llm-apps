@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from agents.coordinator_agent import coordinator_agent
+from agents.tools.media_paths import resolve_upload_media
 from agno.agent import RunResponse
 from dotenv import load_dotenv
 
@@ -34,7 +35,10 @@ async def root():
 # Define the analysis endpoint
 @app.post("/analyze")
 async def analyze(request: AnalysisRequest):
-    video_url = request.video_url
+    try:
+        video_url = resolve_upload_media(request.video_url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     prompt = f"Analyze the following video: {video_url}"
     response: RunResponse = coordinator_agent.run(prompt)
 

@@ -3,6 +3,7 @@ import requests
 import tempfile
 import os
 import json
+import uuid
 import numpy as np
 from page_congif import render_page_config
 
@@ -67,10 +68,11 @@ with col1:
         uploaded_file = st.file_uploader("📤 Upload Video", type=["mp4"])
         
         if uploaded_file is not None:
-            temp_dir = tempfile.gettempdir()
-            # Use a random name to avoid reuse
-            unique_name = f"{int(np.random.rand()*1e8)}_{uploaded_file.name}"
-            file_path = os.path.join(temp_dir, unique_name)
+            # The backend only analyzes files inside this directory (see SPEECH_TRAINER_UPLOAD_DIR)
+            upload_dir = os.getenv("SPEECH_TRAINER_UPLOAD_DIR") or os.path.join(tempfile.gettempdir(), "ai_speech_trainer_uploads")
+            os.makedirs(upload_dir, exist_ok=True)
+            # Server-chosen name; the uploaded filename never becomes part of the path
+            file_path = os.path.join(upload_dir, f"{uuid.uuid4().hex}.mp4")
             
             if not os.path.exists(file_path):
                 with open(file_path, "wb") as f:
