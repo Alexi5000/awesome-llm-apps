@@ -6,7 +6,7 @@ const assert = require('assert');
 const htmlPath = path.join(__dirname, 'index.html');
 const html = fs.readFileSync(htmlPath, 'utf8');
 
-const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/);
+const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
 assert(scriptMatch, 'Could not find <script> block in index.html');
 const scriptCode = scriptMatch[1];
 
