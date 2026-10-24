@@ -3,7 +3,7 @@ phidata
 agno>=2.3.24
 openai==3.35.1
 streamlit==1.66.0
-pypdf==6.21.1
+pypdf==6.21.2
 streamlit-pdf-viewer==0.0.19
 requests==2.33.0
 pytz==2023.4

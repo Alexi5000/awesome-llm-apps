@@ -34,6 +34,7 @@
     "@fastify/busboy": "^3.2.3",
     "katex": "0.18.2",
     "postcss-selector-parser": "7.1.6",
-    "braces": "$braces"
+    "braces": "$braces",
+    "zod": "^4.6.6"
   }
 }
