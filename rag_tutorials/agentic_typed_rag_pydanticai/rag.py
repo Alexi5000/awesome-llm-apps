@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Protocol, Sequence
 from urllib.parse import urlparse
-from urllib.request import HTTPRedirectHandler, Request, build_opener
+from safe_fetch import fetch_public_document
 
 import numpy as np
 
@@ -435,27 +435,9 @@ def validate_public_url(url: str) -> None:
         raise ValueError("Private or local URLs are not supported")
 
 
-class _PublicRedirectHandler(HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        validate_public_url(newurl)
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
-
-
 def fetch_url_text(url: str) -> str:
     """Fetch a bounded HTTP document and return readable text."""
-    validate_public_url(url)
-    request = Request(url, headers={"User-Agent": "typed-rag-demo/1.0"})
-    opener = build_opener(_PublicRedirectHandler())
-    with opener.open(request, timeout=15) as response:
-        content_type = response.headers.get_content_type()
-        if content_type not in {"text/html", "text/plain"}:
-            raise ValueError(f"Unsupported URL content type: {content_type}")
-        body = response.read(MAX_URL_BYTES + 1)
-        if len(body) > MAX_URL_BYTES:
-            raise ValueError("URL content is larger than 2 MB")
-        charset = response.headers.get_content_charset() or "utf-8"
-
-    decoded = body.decode(charset, errors="replace")
+    decoded, content_type = fetch_public_document(url)
     text = html_to_text(decoded) if content_type == "text/html" else decoded.strip()
     if not text:
         raise ValueError("No readable text found at URL")

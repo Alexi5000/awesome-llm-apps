@@ -1111,6 +1111,8 @@
         }
 
         window.addEventListener("message", (event) => {
+          if (event.source !== window.parent || window.parent === window) return;
+          if (document.referrer && event.origin !== new URL(document.referrer).origin) return;
           const data = event.data;
           if (!data || typeof data !== "object") return;
 
@@ -1131,7 +1133,7 @@
           }
         });
 
-        const notificationHandlers = {};
+        const notificationHandlers = Object.create(null);
         function onNotification(method, handler) {
           notificationHandlers[method] = handler;
         }

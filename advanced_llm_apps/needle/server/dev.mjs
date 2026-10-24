@@ -1,7 +1,7 @@
 import "./env.mjs";
 import http from "node:http";
-import { readFile, stat } from "node:fs/promises";
-import { resolve, extname, sep } from "node:path";
+import { readFile, readdir } from "node:fs/promises";
+import { resolve, extname } from "node:path";
 import searchHandler from "../api/search.js";
 import healthHandler from "../api/health.js";
 import { accessError, MAX_REQUEST_BYTES } from "./http.mjs";
@@ -11,6 +11,17 @@ const vite = production
   : await (
       await import("vite")
     ).createServer({ server: { middlewareMode: true }, appType: "spa" });
+const staticFiles = new Map();
+async function loadStaticFiles(directory, prefix = "") {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.name.startsWith(".")) continue;
+    const pathname = `${prefix}/${entry.name}`;
+    const filename = resolve(directory, entry.name);
+    if (entry.isDirectory()) await loadStaticFiles(filename, pathname);
+    else if (entry.isFile()) staticFiles.set(pathname, await readFile(filename));
+  }
+}
+if (production) await loadStaticFiles(resolve("dist"));
 const port = Number(process.env.PORT || 4199);
 const server = http.createServer(async (req, res) => {
   res.status = (n) => {
@@ -41,17 +52,13 @@ const server = http.createServer(async (req, res) => {
       return await searchHandler(req, res);
     }
     if (vite) return vite.middlewares(req, res);
-    const base = resolve("dist");
-    let file = resolve(base, "." + decodeURIComponent(path));
-    if (file !== base && !file.startsWith(base + sep))
+    let file = decodeURIComponent(path);
+    if (file.split("/").some((part) => part === ".." || part.startsWith(".")))
       return res.status(403).end();
-    try {
-      if ((await stat(file)).isDirectory()) file = resolve(file, "index.html");
-    } catch {
-      // Missing downloads/assets must fail visibly, not return the SPA HTML.
-      if (extname(file) || path.startsWith("/api/"))
-        return res.status(404).end();
-      file = resolve(base, "index.html");
+    if (file.endsWith("/")) file += "index.html";
+    if (!staticFiles.has(file)) {
+      if (extname(file) || path.startsWith("/api/")) return res.status(404).end();
+      file = "/index.html";
     }
     const mime = {
       ".html": "text/html",
@@ -66,7 +73,7 @@ const server = http.createServer(async (req, res) => {
       "Content-Type",
       mime[extname(file)] || "application/octet-stream",
     );
-    res.end(await readFile(file));
+    res.end(staticFiles.get(file));
   } catch {
     if (!res.headersSent) res.status(400).json({ error: "Invalid request." });
     else res.end();

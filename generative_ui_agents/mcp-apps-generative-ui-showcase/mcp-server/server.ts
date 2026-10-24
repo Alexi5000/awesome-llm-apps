@@ -1009,7 +1009,11 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      const allowed = (process.env.MCP_ALLOWED_ORIGINS || "http://localhost:3000,http://localhost:5173")
+        .split(",").map((value) => value.trim()).filter(Boolean);
+      callback(null, !origin || allowed.includes(origin));
+    },
     exposedHeaders: ["Mcp-Session-Id"],
   }),
 );

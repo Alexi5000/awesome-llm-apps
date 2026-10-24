@@ -137,3 +137,5 @@ The demo is deployed on Railway with two services:
 | MCP Server | https://mcp-server-production-bbb4.up.railway.app |
 
 For production, set `MCP_SERVER_URL` environment variable to point to your deployed MCP server.
+
+Set `MCP_ALLOWED_ORIGINS` on the MCP server to the comma-separated origins of your web clients (for example, `https://your-app.example`). The local default allows ports 3000 and 5173 on localhost. Embedded apps accept messages only from their parent frame and check its origin against the document referrer when available.

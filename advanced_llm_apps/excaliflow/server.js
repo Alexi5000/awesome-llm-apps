@@ -39,14 +39,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const relPath = decodedUrl === '/' ? 'index.html' : decodedUrl.replace(/^\/+/, '');
-  const safePath = path.resolve(ROOT, relPath);
-
-  if (safePath !== ROOT && !safePath.startsWith(ROOT + path.sep)) {
-    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('403 Forbidden');
+  if (decodedUrl !== '/' && decodedUrl !== '/index.html') {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('404 Not Found');
     return;
   }
+  const safePath = path.join(ROOT, 'index.html');
 
   fs.stat(safePath, (statErr, stats) => {
     if (statErr || !stats.isFile()) {

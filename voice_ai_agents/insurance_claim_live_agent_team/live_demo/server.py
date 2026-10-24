@@ -676,7 +676,8 @@ def owned_session(session_id: str, owner: str | None):
 @app.post("/api/sessions", response_model=SessionResponse)
 async def create_session(request: Request, response: Response) -> SessionResponse:
     await cleanup_sessions()
-    owner = request.cookies.get("intake_owner") or secrets.token_urlsafe(32)
+    supplied_owner = request.cookies.get("intake_owner")
+    owner = next((s.owner for s in sessions.values() if secrets.compare_digest(s.owner.encode(), (supplied_owner or "").encode())), None) or secrets.token_urlsafe(32)
     if len(sessions) >= MAX_SESSIONS or sum(s.owner == owner for s in sessions.values()) >= 4:
         raise HTTPException(429, "Too many intakes. Close or reset an existing intake first.")
     session = IntakeSession(session_id=uuid.uuid4().hex, owner=owner)
