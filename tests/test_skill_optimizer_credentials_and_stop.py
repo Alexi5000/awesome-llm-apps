@@ -9,6 +9,7 @@ import asyncio
 import importlib.util
 import logging
 import os
+import re
 import sys
 import types
 import unittest
@@ -19,7 +20,7 @@ from unittest.mock import patch
 from fastapi import HTTPException
 
 ROOT = Path(__file__).resolve().parents[1]
-BACKEND = ROOT / "awesome_agent_skills/self-improving-agent-skills/backend"
+BACKEND = ROOT / "agent_skills/self-improving-agent-skills/backend"
 DISPATCHED = []
 
 
@@ -82,15 +83,17 @@ optimizer_module = load_optimizer()
 
 def load_app_handlers(optimizer_cls):
     tree = ast.parse((BACKEND / "app.py").read_text())
-    names = {"start_optimization", "stop_optimization"}
-    nodes = [n for n in tree.body if isinstance(n, ast.AsyncFunctionDef) and n.name in names]
+    names = {"start_optimization", "stop_optimization", "resolve_model", "default_model"}
+    nodes = [n for n in tree.body if isinstance(n, (ast.AsyncFunctionDef, ast.FunctionDef)) and n.name in names]
     for node in nodes:
         node.decorator_list = []
     scope = {
         "asyncio": asyncio, "HTTPException": HTTPException, "StartRequest": object,
         "SkillOptimizer": optimizer_cls, "OptimizationStopped": optimizer_module.OptimizationStopped,
         "logger": logging.getLogger("skill-stop-test"), "traceback": SimpleNamespace(format_exc=lambda: "tb"),
-        "sessions": {},
+        "sessions": {}, "Optional": __import__("typing").Optional, "os": os,
+        "DEFAULT_MODEL": optimizer_module.DEFAULT_MODEL,
+        "MODEL_NAME_RE": re.compile(r"[A-Za-z0-9][A-Za-z0-9._\-/]{0,127}"),
     }
     exec(compile(ast.Module(body=nodes, type_ignores=[]), str(BACKEND / "app.py"), "exec"), scope)
     return scope
@@ -148,7 +151,7 @@ class StopSemanticsTests(unittest.TestCase):
         events = {}
 
         class BlockingOptimizer:
-            def __init__(self, api_key):
+            def __init__(self, api_key, model):
                 self.calls_after_release = 0
 
             async def optimize(self, skill_files, scenarios, evals, max_rounds, callback, should_stop):
@@ -167,7 +170,7 @@ class StopSemanticsTests(unittest.TestCase):
         async def scenario():
             events["started"] = asyncio.Event()
             events["release"] = asyncio.Event()
-            await scope["start_optimization"]("s1", SimpleNamespace(gemini_api_key="k", max_rounds=1))
+            await scope["start_optimization"]("s1", SimpleNamespace(gemini_api_key="k", max_rounds=1, model=None))
             await events["started"].wait()
             task = session["task"]
             result = await scope["stop_optimization"]("s1")
@@ -185,7 +188,7 @@ class StopSemanticsTests(unittest.TestCase):
 
     def test_restart_after_stop_is_not_overwritten_by_old_run(self):
         class ReturningOptimizer:
-            def __init__(self, api_key):
+            def __init__(self, api_key, model):
                 pass
 
             async def optimize(self, skill_files, scenarios, evals, max_rounds, callback, should_stop):
@@ -199,7 +202,7 @@ class StopSemanticsTests(unittest.TestCase):
         scope["sessions"]["s1"] = session
 
         async def scenario():
-            await scope["start_optimization"]("s1", SimpleNamespace(gemini_api_key="k", max_rounds=1))
+            await scope["start_optimization"]("s1", SimpleNamespace(gemini_api_key="k", max_rounds=1, model=None))
             await session["task"]
 
         asyncio.run(scenario())

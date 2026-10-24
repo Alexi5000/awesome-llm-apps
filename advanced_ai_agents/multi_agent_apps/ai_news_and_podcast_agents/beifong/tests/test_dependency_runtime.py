@@ -1,10 +1,12 @@
 import asyncio
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
 import sys
 import threading
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -240,7 +242,8 @@ class DependencyRuntimeTests(unittest.TestCase):
             torch.load(unsafe, weights_only=True)
 
     def test_actual_web_extractor(self):
-        result = get_web_data(self.url)
+        with patch.dict(os.environ, {"ALLOW_PRIVATE_URLS": "true"}):
+            result = get_web_data(self.url)
         self.assertEqual(result["metadata"]["title"], "Local story")
         self.assertEqual(result["metadata"]["description"], "Verified metadata")
         self.assertIn("News content", result["raw_html"])

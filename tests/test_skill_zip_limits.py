@@ -11,7 +11,7 @@ import zipfile
 
 from fastapi import HTTPException
 
-SOURCE = Path(__file__).resolve().parents[1] / 'awesome_agent_skills/self-improving-agent-skills/backend/app.py'
+SOURCE = Path(__file__).resolve().parents[1] / 'agent_skills/self-improving-agent-skills/backend/app.py'
 
 
 def handler(**overrides):
