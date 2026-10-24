@@ -137,3 +137,35 @@ class MediaPathTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BeifongPublicFetchTests(PublicFetchTests):
+    def setUp(self):
+        global fetch
+        original = fetch
+        fetch = load("advanced_ai_agents/multi_agent_apps/ai_news_and_podcast_agents/beifong/utils/safe_fetch.py", "beifong_safe_fetch")
+        self.addCleanup(lambda: globals().__setitem__("fetch", original))
+        super().setUp()
+
+class TypedRagFetchTests(unittest.TestCase):
+    def test_pins_address_and_preserves_plain_text(self):
+        module = load("rag_tutorials/agentic_typed_rag_pydanticai/safe_fetch.py", "typed_safe_fetch")
+        connection = Mock()
+        connection.getresponse.return_value = response(body=b"plain text")
+        with patch.object(module.socket, "getaddrinfo", return_value=resolution("8.8.8.8")), patch.object(module, "_PinnedHTTPSConnection", return_value=connection) as factory:
+            self.assertEqual(module.fetch_public_document("https://example.com"), ("plain text", "text/plain"))
+        factory.assert_called_once_with("example.com", 443, "8.8.8.8")
+
+    def test_rejects_private_even_with_environment_opt_in(self):
+        module = load("rag_tutorials/agentic_typed_rag_pydanticai/safe_fetch.py", "typed_safe_fetch")
+        with patch.dict(module.os.environ, {"ALLOW_PRIVATE_URLS": "true"}), patch.object(module.socket, "getaddrinfo", return_value=resolution("127.0.0.1")), self.assertRaises(ValueError):
+            module.fetch_public_document("https://example.com")
+
+    def test_rejects_binary_document(self):
+        module = load("rag_tutorials/agentic_typed_rag_pydanticai/safe_fetch.py", "typed_safe_fetch")
+        connection = Mock()
+        reply = response(body=b"binary")
+        reply.headers["Content-Type"] = "application/octet-stream"
+        connection.getresponse.return_value = reply
+        with patch.object(module.socket, "getaddrinfo", return_value=resolution("8.8.8.8")), patch.object(module, "_PinnedHTTPSConnection", return_value=connection), self.assertRaises(ValueError):
+            module.fetch_public_document("https://example.com")

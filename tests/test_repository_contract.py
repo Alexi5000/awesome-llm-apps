@@ -13,7 +13,7 @@ class RepositoryContractTests(unittest.TestCase):
             "advanced_ai_agents",
             "advanced_llm_apps",
             "ai_agent_framework_crash_course",
-            "awesome_agent_skills",
+            "agent_skills",
             "mcp_ai_agents",
             "rag_tutorials",
             "voice_ai_agents",

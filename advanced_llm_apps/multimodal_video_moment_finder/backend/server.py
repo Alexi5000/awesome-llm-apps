@@ -93,7 +93,9 @@ async def find_moment(
     top_k: int = Form(5),
 ):
     """Find video moments matching an uploaded image."""
-    data = await image.read()
+    data = await image.read(10 * 1024 * 1024 + 1)
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(413, "Image exceeds the 10 MB limit")
     mime = image.content_type or "image/jpeg"
     try:
         moments = store.find_moment(data, mime, top_k=top_k, video_id=video_id)

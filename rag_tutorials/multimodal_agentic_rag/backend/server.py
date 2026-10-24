@@ -156,7 +156,7 @@ async def add_file_source(
     title: str = Form(""),
     notes: str = Form(""),
 ):
-    data = await file.read()
+    data = await file.read(120 * 1024 * 1024 + 1)
     if len(data) > 120 * 1024 * 1024:
         raise HTTPException(400, "File too large for this demo. Keep uploads under 120 MB.")
     try:
