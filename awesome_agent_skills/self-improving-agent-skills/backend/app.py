@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB total
 MAX_FILE_SIZE = 1 * 1024 * 1024     # 1 MB per file
 MAX_FILE_COUNT = 50
+MAX_EXPANDED_SIZE = MAX_UPLOAD_SIZE  # total decompressed bytes per ZIP upload
+ZIP_READ_CHUNK = 64 * 1024
 SESSION_TTL = 3600  # 1 hour
 ALLOWED_EXTENSIONS = {
     ".md", ".txt", ".json", ".yaml", ".yml", ".py", ".js", ".ts",
@@ -133,6 +135,7 @@ async def upload_skill(file: UploadFile = File(...)):
         with zipfile.ZipFile(io.BytesIO(content)) as zf:
             skill_files = {}
             file_list = []
+            expanded_total = 0
             for entry in zf.infolist():
                 name = entry.filename
                 if name.endswith("/") or name.startswith("__MACOSX") or "/.DS_Store" in name or name.endswith(".DS_Store"):
@@ -149,11 +152,28 @@ async def upload_skill(file: UploadFile = File(...)):
                 if entry.file_size > MAX_FILE_SIZE:
                     logger.warning("Skipping oversized zip member")
                     continue
+                if expanded_total + entry.file_size > MAX_EXPANDED_SIZE:
+                    raise HTTPException(status_code=413, detail=f"Expanded archive exceeds {MAX_EXPANDED_SIZE // (1024*1024)}MB limit")
+                # Stream the member in bounded chunks and stop as soon as either the
+                # per-member or the total expanded budget would be exceeded.
+                chunks = []
+                member_size = 0
                 with zf.open(entry) as member:
-                    raw = member.read(MAX_FILE_SIZE + 1)
-                if len(raw) > MAX_FILE_SIZE:
+                    while True:
+                        chunk = member.read(ZIP_READ_CHUNK)
+                        if not chunk:
+                            break
+                        member_size += len(chunk)
+                        expanded_total += len(chunk)
+                        if member_size > MAX_FILE_SIZE:
+                            break
+                        if expanded_total > MAX_EXPANDED_SIZE:
+                            raise HTTPException(status_code=413, detail=f"Expanded archive exceeds {MAX_EXPANDED_SIZE // (1024*1024)}MB limit")
+                        chunks.append(chunk)
+                if member_size > MAX_FILE_SIZE:
                     logger.warning("Skipping oversized zip member")
                     continue
+                raw = b"".join(chunks)
                 file_content = raw.decode("utf-8", errors="ignore")
                 skill_files[name] = file_content
                 file_list.append(name)
