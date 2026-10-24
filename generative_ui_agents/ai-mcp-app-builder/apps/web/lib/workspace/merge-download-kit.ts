@@ -19,6 +19,30 @@ export function getBaseKitPath(): string | null {
  * `apps/mcp-use-server` with the sandbox tree, and returns a gzip tarball stream.
  * Caller should destroy the stream or wait for `close` so temp dirs can be removed.
  */
+function validateArchiveEntry(name: string, entry: tar.ReadEntry): boolean {
+  if (path.posix.isAbsolute(name) || name.split("/").includes("..") || name.includes("\\")) {
+    return false;
+  }
+  if (entry.type === "SymbolicLink" || entry.type === "Link") {
+    const link = entry.linkpath;
+    const target = path.posix.normalize(entry.type === "Link" ? link : path.posix.join(path.posix.dirname(name), link));
+    if (path.posix.isAbsolute(link) || link.includes("\\") || target.split("/")[0] !== name.split("/")[0]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+async function extractArchive(file: string, cwd: string): Promise<void> {
+  let rejected = false;
+  await tar.x({ file, cwd, filter: (name, entry) => {
+    const safe = validateArchiveEntry(name, entry);
+    rejected ||= !safe;
+    return safe;
+  } });
+  if (rejected) throw new Error("Archive entry escapes its root");
+}
+
 export async function mergeE2bWorkspaceIntoBaseKit(
   workspaceTarGz: Buffer,
   baseTarGzPath: string,
@@ -32,7 +56,7 @@ export async function mergeE2bWorkspaceIntoBaseKit(
     await fs.writeFile(workspaceArchive, workspaceTarGz);
 
     await fs.mkdir(baseExtract, { recursive: true });
-    await tar.x({ file: baseTarGzPath, cwd: baseExtract });
+    await extractArchive(baseTarGzPath, baseExtract);
 
     const kitPath = path.join(baseExtract, KIT_FOLDER_NAME);
     const stat = await fs.stat(kitPath).catch(() => null);
@@ -41,7 +65,7 @@ export async function mergeE2bWorkspaceIntoBaseKit(
     }
 
     await fs.mkdir(wsExtract, { recursive: true });
-    await tar.x({ file: workspaceArchive, cwd: wsExtract });
+    await extractArchive(workspaceArchive, wsExtract);
 
     const wsPath = path.join(wsExtract, E2B_WORKSPACE_DIR);
     const wsStat = await fs.stat(wsPath).catch(() => null);
