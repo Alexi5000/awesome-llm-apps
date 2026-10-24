@@ -137,3 +137,12 @@ class MediaPathTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BeifongPublicFetchTests(PublicFetchTests):
+    def setUp(self):
+        global fetch
+        original = fetch
+        fetch = load("advanced_ai_agents/multi_agent_apps/ai_news_and_podcast_agents/beifong/utils/safe_fetch.py", "beifong_safe_fetch")
+        self.addCleanup(lambda: globals().__setitem__("fetch", original))
+        super().setUp()

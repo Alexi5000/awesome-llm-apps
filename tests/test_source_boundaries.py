@@ -103,7 +103,7 @@ class SourceBoundaryTests(unittest.TestCase):
 
     def test_optimizer_logs_escape_control_characters(self):
         import logging
-        tree = ast.parse((ROOT / "awesome_agent_skills/self-improving-agent-skills/backend/app.py").read_text())
+        tree = ast.parse((ROOT / "agent_skills/self-improving-agent-skills/backend/app.py").read_text())
         calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
                  and isinstance(node.func, ast.Attribute) and node.func.attr == "info"
                  and node.args and isinstance(node.args[0], ast.Constant)

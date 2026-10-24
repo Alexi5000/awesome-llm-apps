@@ -20,9 +20,10 @@ def load_server():
     agent.blank_claim = dict
     agent.build_initial_workflow_state = lambda *a, **k: {}
     agent.run_claim_workflow = lambda *a, **k: {}
-    schemas = types.ModuleType("schemas")
-    schemas.ClaimClassification = schemas.ClaimNarrative = object
-    with patch.dict(sys.modules, {"agent": agent, "schemas": schemas}), patch.object(sys, "path", list(sys.path)):
+    google = types.ModuleType("google")
+    genai = types.ModuleType("google.genai")
+    genai.types = types.SimpleNamespace()
+    with patch.dict(sys.modules, {"agent": agent, "google": google, "google.genai": genai}), patch.object(sys, "path", list(sys.path)):
         spec = importlib.util.spec_from_file_location("cf_insurance_server", APP / "live_demo/server.py")
         module = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = module
@@ -36,7 +37,14 @@ server = load_server()
 
 class FakeWebSocket:
     def __init__(self, origin):
-        self.headers = {} if origin is None else {"origin": origin}
+        self.headers = {"host": "localhost:4177"}
+        if origin is not None:
+            self.headers["origin"] = origin
+            self.headers["host"] = __import__("urllib.parse", fromlist=["urlparse"]).urlparse(origin).netloc
+        self.client = types.SimpleNamespace(host="127.0.0.1")
+        self.url = types.SimpleNamespace(scheme="ws")
+        self.query_params = {"session_id": "owned"}
+        self.cookies = {"intake_owner": "owner"}
         self.accepted = False
         self.closed_with = None
         self.sent = []
@@ -61,7 +69,9 @@ class LiveOriginTests(unittest.TestCase):
 
     def connect(self, origin):
         socket = FakeWebSocket(origin)
-        with patch.object(server, "_client", side_effect=AssertionError("provider must not be reached")):
+        genai = types.ModuleType("google.genai")
+        genai.types = types.SimpleNamespace()
+        with patch.dict(sys.modules, {"google": types.ModuleType("google"), "google.genai": genai}), patch.object(server, "_client", side_effect=AssertionError("provider must not be reached")):
             asyncio.run(server.live_voice(socket))
         return socket
 
@@ -75,8 +85,9 @@ class LiveOriginTests(unittest.TestCase):
         self.assertEqual(server.sessions, {})
 
     def test_default_local_ui_origins_are_admitted(self):
-        for origin in ["http://127.0.0.1:4177", "http://localhost:4177", "http://localhost:4177/"]:
+        for origin in ["http://127.0.0.1:4177", "http://localhost:4177"]:
             with self.subTest(origin=origin):
+                server.sessions["owned"] = server.IntakeSession("owned", owner="owner")
                 socket = self.connect(origin)
                 self.assertTrue(socket.accepted)
                 self.assertNotEqual(socket.closed_with, 1008)

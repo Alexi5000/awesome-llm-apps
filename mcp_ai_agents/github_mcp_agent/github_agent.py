@@ -3,6 +3,7 @@ import os
 import streamlit as st
 from textwrap import dedent
 from agno.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.run.agent import RunOutput
 from agno.tools.mcp import MCPTools
 from mcp import StdioServerParameters
@@ -17,13 +18,9 @@ with st.sidebar:
     
     openai_key = st.text_input("OpenAI API Key", type="password",
                               help="Required for the AI agent to interpret queries and format results")
-    if openai_key:
-        os.environ["OPENAI_API_KEY"] = openai_key
     
     github_token = st.text_input("GitHub Token", type="password", 
                                 help="Create a token with repo scope at github.com/settings/tokens")
-    if github_token:
-        os.environ["GITHUB_TOKEN"] = github_token
     
     st.markdown("---")
     st.markdown("### Example Queries")
@@ -63,11 +60,11 @@ else:
 query = st.text_area("Your Query", value=query_template, 
                      placeholder="What would you like to know about this repository?")
 
-async def run_github_agent(message):
-    if not os.getenv("GITHUB_TOKEN"):
+async def run_github_agent(message, openai_key, github_token):
+    if not github_token:
         return "Error: GitHub token not provided"
     
-    if not os.getenv("OPENAI_API_KEY"):
+    if not openai_key:
         return "Error: OpenAI API key not provided"
     
     try:
@@ -80,14 +77,15 @@ async def run_github_agent(message):
                 "ghcr.io/github/github-mcp-server"
             ],
             env={
-                **os.environ,
-                "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv('GITHUB_TOKEN'),
+                **{key: os.environ[key] for key in ("PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "DOCKER_TLS_VERIFY", "DOCKER_CERT_PATH") if key in os.environ},
+                "GITHUB_PERSONAL_ACCESS_TOKEN": github_token,
                 "GITHUB_TOOLSETS": "repos,issues,pull_requests"
             }
         )
         
         async with MCPTools(server_params=server_params) as mcp_tools:
             agent = Agent(
+                model=OpenAIChat(id="gpt-4o", api_key=openai_key),
                 tools=[mcp_tools],
                 instructions=dedent("""\
                     You are a GitHub assistant. Help users explore repositories and their activity.
@@ -122,7 +120,7 @@ if st.button("🚀 Run Query", type="primary", use_container_width=True):
             else:
                 full_query = query
                 
-            result = asyncio.run(run_github_agent(full_query))
+            result = asyncio.run(run_github_agent(full_query, openai_key, github_token))
         
         st.markdown("### Results")
         st.markdown(result)

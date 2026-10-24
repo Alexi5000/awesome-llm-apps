@@ -1,4 +1,4 @@
-import requests
+from utils.safe_fetch import fetch_public_html
 from bs4 import BeautifulSoup
 import random
 from typing import Dict, List, TypedDict
@@ -48,7 +48,7 @@ def extract_meta_tags(soup: BeautifulSoup) -> MetadataDict:
         name = meta.get("name", "").lower()
         prop = meta.get("property", "").lower()
         content = meta.get("content", "")
-        if prop.startswith("ogg:"):
+        if prop.startswith("og:"):
             og_key = prop[3:]
             metadata["og"][og_key] = content
         elif prop.startswith("twitter:") or name.startswith("twitter:"):
@@ -62,9 +62,7 @@ def extract_meta_tags(soup: BeautifulSoup) -> MetadataDict:
 
 
 def get_web_data(url: str) -> WebData:
-    HEADERS["User-Agent"] = random.choice(USER_AGENTS)
-    response = requests.get(url, headers=HEADERS, timeout=10)
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(fetch_public_html(url), "html.parser")
     metadata = extract_meta_tags(soup)
     body = str(soup.find("body"))
     return {"raw_html": body, "metadata": metadata}
