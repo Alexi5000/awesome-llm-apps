@@ -19,7 +19,7 @@ export interface IntrospectedTool {
 }
 
 async function connectClient(url: string) {
-  console.log(`[mcp-introspect] Connecting to ${url}...`);
+  console.log("%s", JSON.stringify(`[mcp-introspect] Connecting to ${url}...`));
 
   // Try Streamable HTTP first, fall back to SSE
   try {
@@ -29,12 +29,11 @@ async function connectClient(url: string) {
     );
     const transport = new StreamableHTTPClientTransport(new URL(url));
     await client.connect(transport);
-    console.log(`[mcp-introspect] Connected via StreamableHTTP to ${url}`);
+    console.log("%s", JSON.stringify(`[mcp-introspect] Connected via StreamableHTTP to ${url}`));
     return client;
   } catch (err) {
-    console.log(
-      `[mcp-introspect] StreamableHTTP failed for ${url}:`,
-      (err as Error).message,
+    console.log("%s", JSON.stringify(`[mcp-introspect] StreamableHTTP failed for ${url}:`),
+      JSON.stringify((err as Error).message),
     );
     try {
       const client = new Client(
@@ -43,12 +42,11 @@ async function connectClient(url: string) {
       );
       const transport = new SSEClientTransport(new URL(url));
       await client.connect(transport);
-      console.log(`[mcp-introspect] Connected via SSE to ${url}`);
+      console.log("%s", JSON.stringify(`[mcp-introspect] Connected via SSE to ${url}`));
       return client;
     } catch (sseErr) {
-      console.error(
-        `[mcp-introspect] SSE also failed for ${url}:`,
-        (sseErr as Error).message,
+      console.error("%s", JSON.stringify(`[mcp-introspect] SSE also failed for ${url}:`),
+        JSON.stringify((sseErr as Error).message),
       );
       throw sseErr;
     }
@@ -71,7 +69,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  console.log(`[mcp-introspect] POST received for endpoint: ${endpoint}`);
+  console.log("%s", JSON.stringify(`[mcp-introspect] POST received for endpoint: ${endpoint}`));
   let client: Client | null = null;
   try {
     client = await connectClient(endpoint);
@@ -194,7 +192,7 @@ export async function POST(req: NextRequest) {
     );
     return NextResponse.json({ tools: allTools, resources: allResources });
   } catch (err) {
-    console.error(`[mcp-introspect] Error for ${endpoint}:`, err);
+    console.error("%s", JSON.stringify(`[mcp-introspect] Error for ${endpoint}:`), JSON.stringify(String(err)));
     try {
       await client?.close();
     } catch {

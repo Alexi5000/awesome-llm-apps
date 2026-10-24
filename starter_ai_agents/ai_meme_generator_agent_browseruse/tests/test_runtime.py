@@ -27,7 +27,7 @@ class RuntimeTests(unittest.TestCase):
             with patch.object(app, "Agent", side_effect=construct), patch.object(Agent, "run", new=AsyncMock(return_value=history)):
                 for provider in ("Claude", "Deepseek", "OpenAI"):
                     self.assertIsNone(await app.generate_meme("deadline panic", provider, "offline-test-key"))
-            self.assertEqual([a.llm.model for a in agents], ["claude-3-5-sonnet-20241022", "deepseek-chat", "gpt-4o"])
+            self.assertEqual([a.llm.model for a in agents], ["claude-sonnet-4-5", "deepseek-chat", "gpt-4o"])
             self.assertFalse(agents[1].settings.use_vision)
             self.assertEqual(agents[1].llm.base_url, "https://api.deepseek.com/v1")
             self.assertTrue(all("deadline panic" in a.task for a in agents))

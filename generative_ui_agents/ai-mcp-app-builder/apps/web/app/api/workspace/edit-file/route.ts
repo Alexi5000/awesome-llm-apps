@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[workspace/edit-file]", message);
+    console.error("[workspace/edit-file]", JSON.stringify(message));
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

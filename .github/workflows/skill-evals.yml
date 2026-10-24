@@ -11,6 +11,9 @@ on:
       - "agent_skills/**"
       - "README.md"
 
+permissions:
+  contents: read
+
 jobs:
   evals:
     name: deterministic evals

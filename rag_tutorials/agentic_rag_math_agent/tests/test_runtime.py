@@ -56,7 +56,7 @@ class MathRuntimeTests(unittest.TestCase):
                 self.assertEqual(query_router.answer_math_question("2+2?"), completion.text)
             self.assertIn("Answer: 4", complete.call_args.args[0])
         response = SimpleNamespace(json=lambda: {"answer": "The sum is 4"})
-        with patch.object(query_router, "query_kb", return_value=("", 0)), patch.object(query_router.requests, "post", return_value=response) as request, patch.object(query_router.OpenAI, "complete", return_value=completion), patch.object(query_router, "OPENAI_API_KEY", "test-key"), dspy.context(lm=DummyLM([{"verdict": "Yes"}, {"verdict": "Yes"}])):
+        with patch.object(query_router, "query_kb", return_value=("", 0)), patch.object(query_router.requests, "post", return_value=response) as request, patch.object(query_router, "TAVILY_API_KEY", "test-tavily-key"), patch.object(query_router.OpenAI, "complete", return_value=completion), patch.object(query_router, "OPENAI_API_KEY", "test-key"), dspy.context(lm=DummyLM([{"verdict": "Yes"}, {"verdict": "Yes"}])):
             self.assertEqual(query_router.answer_math_question("2+2?"), completion.text)
             self.assertEqual(request.call_args.kwargs["json"]["query"], "2+2?")
 

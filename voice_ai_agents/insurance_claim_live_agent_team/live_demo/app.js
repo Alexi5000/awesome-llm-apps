@@ -241,7 +241,7 @@ function renderPinboard() {
   const cards = photos.map(
     (photo, index) => `
       <figure class="polaroid" style="--tilt: ${index % 2 ? 2 : -2.5}deg" data-key="${escapeHtml(photo.id)}">
-        <img src="${photo.data_url}" alt="Camera frame pinned as evidence" />
+        <img src="${escapeHtml(photo.data_url)}" alt="Camera frame pinned as evidence" />
         <figcaption>${escapeHtml(photo.caption)}</figcaption>
         <span class="tag ${photo.confirmed ? "" : "unconfirmed"}">${photo.claimant_description ? `Claimant says: ${escapeHtml(photo.claimant_description)} · ` : ""}${photo.confirmed ? "Supported by this image" : "Claim not confirmed by this image"}</span>
         <span class="tag">Seen on camera ${escapeHtml(photo.captured_at || "")} · ${escapeHtml(photo.evidence_type || "evidence")}</span>
@@ -249,14 +249,14 @@ function renderPinboard() {
   );
   if (sketch) {
     cards.push(`
-      <figure class="polaroid sketch" style="--tilt: 1.5deg" data-key="sketch-${sketch.version}">
-        <img src="${sketch.data_url}" alt="Hand drawn sketch of the incident scene" />
+      <figure class="polaroid sketch" style="--tilt: 1.5deg" data-key="sketch-${escapeHtml(sketch.version)}">
+        <img src="${escapeHtml(sketch.data_url)}" alt="Hand drawn sketch of the incident scene" />
         <figcaption>Does this look right?</figcaption>
-        <span class="tag">Sketch ${sketch.version}, drawn from what you described</span>
+        <span class="tag">Sketch ${escapeHtml(sketch.version)}, drawn from what you described</span>
       </figure>`);
   }
   const currentKeys = [...pinboardEl.querySelectorAll("[data-key]")].map((el) => el.dataset.key).join("|");
-  const nextKeys = [...photos.map((p) => p.id), sketch ? `sketch-${sketch.version}` : ""].filter(Boolean).join("|");
+  const nextKeys = [...photos.map((p) => p.id), sketch ? `sketch-${escapeHtml(sketch.version)}` : ""].filter(Boolean).join("|");
   if (currentKeys !== nextKeys) pinboardEl.innerHTML = cards.join("");
 }
 
@@ -303,7 +303,7 @@ function renderTeam() {
             headline = `${String(item.result.routing_decision || "").replaceAll("_", " ")}: ${facts} open fact${facts === 1 ? "" : "s"}${docs ? ", documents still needed" : ""}`;
           }
           const meta = phase === "running" ? "working" : item.scheduling === "INTERRUPT" ? "interrupted the agent" : item.duration_ms != null ? `${item.duration_ms} ms` : "";
-          return `<li><span class="team-dot ${phase}"></span><span><span class="team-name">${escapeHtml(teamLabels[item.name] || item.name)}</span> · ${escapeHtml(headline)}</span><span class="team-meta ${item.scheduling === "INTERRUPT" ? "interrupt" : ""}">${escapeHtml(meta)}</span></li>`;
+          return `<li><span class="team-dot ${escapeHtml(phase)}"></span><span><span class="team-name">${escapeHtml(teamLabels[item.name] || item.name)}</span> · ${escapeHtml(headline)}</span><span class="team-meta ${item.scheduling === "INTERRUPT" ? "interrupt" : ""}">${escapeHtml(meta)}</span></li>`;
         })
         .join("")
     : `<li class="empty">Policy desk, claim writer, evidence, and sketch artist will show up here as the agent calls them.</li>`;
