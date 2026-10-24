@@ -14,7 +14,7 @@
   "devDependencies": {
     "braces": "file:vendor/braces-3.0.3.tgz",
     "concurrently": "^8.2.0",
-    "electron": "44.9.0",
+    "electron": "44.9.1",
     "nodemon": "^3.0.0"
   },
   "overrides": { "braces": "$braces" },
