@@ -8,7 +8,8 @@ test('serves the editor without exposing server source or workspace files', asyn
   try {
     assert.equal((await fetch(base + '/')).status, 200);
     assert.equal((await fetch(base + '/index.html')).status, 200);
-    for (const path of ['/server.js', '/package.json', '/.env', '/%2e%2e%2fsecret']) {
+    assert.equal((await fetch(base + '/%2e%2e%2fsecret')).status, 403);
+    for (const path of ['/server.js', '/package.json', '/.env']) {
       assert.equal((await fetch(base + path)).status, 404, path);
     }
   } finally {

@@ -39,6 +39,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (decodedUrl.split(/[\\/]/).includes('..')) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('403 Forbidden');
+    return;
+  }
   if (decodedUrl !== '/' && decodedUrl !== '/index.html') {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('404 Not Found');
