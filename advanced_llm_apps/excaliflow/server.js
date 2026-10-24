@@ -46,38 +46,18 @@ const server = http.createServer((req, res) => {
   }
   const safePath = path.join(ROOT, 'index.html');
 
-  fs.stat(safePath, (statErr, stats) => {
-    if (statErr || !stats.isFile()) {
+  fs.readFile(safePath, (readErr, data) => {
+    if (readErr) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('404 Not Found');
       return;
     }
-
-    const ext = path.extname(safePath).toLowerCase();
-    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-
-    if (req.method === 'HEAD') {
-      res.writeHead(200, {
-        'Content-Type': contentType,
-        'Content-Length': stats.size,
-        'Cache-Control': 'no-cache'
-      });
-      res.end();
-      return;
-    }
-
-    fs.readFile(safePath, (readErr, data) => {
-      if (readErr) {
-        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('500 Internal Server Error');
-        return;
-      }
-      res.writeHead(200, {
-        'Content-Type': contentType,
-        'Cache-Control': 'no-cache'
-      });
-      res.end(data);
+    res.writeHead(200, {
+      'Content-Type': MIME_TYPES['.html'],
+      'Content-Length': data.length,
+      'Cache-Control': 'no-cache'
     });
+    res.end(req.method === 'HEAD' ? undefined : data);
   });
 });
 
