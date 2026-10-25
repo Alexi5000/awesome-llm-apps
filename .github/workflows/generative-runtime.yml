@@ -142,6 +142,23 @@ jobs:
       - run: uv sync --frozen
       - name: Construct agent with provider network disabled
         run: uv run --frozen python "$GITHUB_WORKSPACE/tests/generative_runtime_smoke.py"
+      - name: Verify telemetry propagation security and compatibility
+        if: matrix.directory == 'ai-financial-coach-agent/agent'
+        run: |
+          uv run --frozen python -m unittest discover -s tests -v
+          uv run --frozen python -m unittest discover -s vendor/opentelemetry-api/tests -v
       - name: Check adapter and checkpoint compatibility
         if: matrix.directory == 'ai-shadcn-component-generator/apps/agent'
         run: uv run --frozen python -m unittest discover -s tests -v
+  telemetry-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build complete financial coach image
+        run: docker build --tag telemetry:patched generative_ui_agents/ai-financial-coach-agent
+      - name: Verify packaged telemetry and ADK with networking disabled
+        run: |
+          docker run --rm --network none --workdir /app/agent telemetry:patched python -m unittest discover -s tests -v
+          docker run --rm --network none --workdir /app/agent telemetry:patched python -m unittest discover -s vendor/opentelemetry-api/tests -v
+          docker run --rm --network none --workdir /app/agent --volume "$PWD/tests/generative_runtime_smoke.py:/tmp/smoke.py:ro" telemetry:patched python /tmp/smoke.py

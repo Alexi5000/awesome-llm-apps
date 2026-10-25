@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-api"
+version = "1.44.0+techtide.1"
+description = "OpenTelemetry API 1.44.0 with upstream tracestate security backport"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = ["typing-extensions>=4.5.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["opentelemetry"]
+
+[project.entry-points."opentelemetry_context"]
+"contextvars_context" = "opentelemetry.context.contextvars_context:ContextVarsRuntimeContext"
+
+[project.entry-points."opentelemetry_environment_variables"]
+"api" = "opentelemetry.environment_variables"
+
+[project.entry-points."opentelemetry_meter_provider"]
+"default_meter_provider" = "opentelemetry.metrics:NoOpMeterProvider"
+
+[project.entry-points."opentelemetry_propagator"]
+"baggage" = "opentelemetry.baggage.propagation:W3CBaggagePropagator"
+"tracecontext" = "opentelemetry.trace.propagation.tracecontext:TraceContextTextMapPropagator"
+
+[project.entry-points."opentelemetry_tracer_provider"]
+"default_tracer_provider" = "opentelemetry.trace:NoOpTracerProvider"

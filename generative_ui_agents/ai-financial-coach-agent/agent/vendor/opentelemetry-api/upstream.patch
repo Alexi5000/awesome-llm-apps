@@ -1,0 +1,77 @@
+diff --git a/opentelemetry/trace/propagation/tracecontext.py b/opentelemetry/trace/propagation/tracecontext.py
+--- a/opentelemetry/trace/propagation/tracecontext.py
++++ b/opentelemetry/trace/propagation/tracecontext.py
+@@ -1,13 +1,19 @@
+ # Copyright The OpenTelemetry Authors
+ # SPDX-License-Identifier: Apache-2.0
+ #
++import logging
+ import re
+ 
+ from opentelemetry import trace
+ from opentelemetry.context.context import Context
+ from opentelemetry.propagators import textmap
+ from opentelemetry.trace import format_span_id, format_trace_id
+-from opentelemetry.trace.span import TraceState
++from opentelemetry.trace.span import (
++    _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH,
++    TraceState,
++)
++
++_logger = logging.getLogger(__name__)
+ 
+ 
+ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
+@@ -57,6 +63,16 @@ def extract(
+         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
+         if tracestate_headers is None:
+             tracestate = None
++        elif (
++            # multiple header fields are combined with "," (RFC 9110, section 5.3)
++            sum(len(header) for header in tracestate_headers) + len(tracestate_headers) - 1
++            > _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH
++        ):
++            _logger.warning(
++                "tracestate header exceeded the maximum length of %d characters",
++                _TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH,
++            )
++            tracestate = None
+         else:
+             tracestate = TraceState.from_header(tracestate_headers)
+ 
+diff --git a/opentelemetry/trace/span.py b/opentelemetry/trace/span.py
+--- a/opentelemetry/trace/span.py
++++ b/opentelemetry/trace/span.py
+@@ -43,8 +43,8 @@
+ 
+ 
+ _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
+-_delimiter_pattern = re.compile(r"[ \t]*,[ \t]*")
+-_member_pattern = re.compile(f"({_KEY_FORMAT})(=)({_VALUE_FORMAT})[ \t]*")
++_TRACECONTEXT_MAXIMUM_TRACESTATE_LENGTH = 8192
++_member_pattern = re.compile(f"({_KEY_FORMAT})=({_VALUE_FORMAT})")
+ _logger = logging.getLogger(__name__)
+ 
+ 
+@@ -397,8 +397,9 @@ def from_header(cls, header_list: list[str]) -> TraceState:
+         """
+         pairs = {}  # type: dict[str, str]
+         for header in header_list:
+-            members: list[str] = re.split(_delimiter_pattern, header)
+-            for member in members:
++            for member in header.split(","):
++                # remove optional whitespace (RFC 9110, section 5.6.3)
++                member = member.strip(" \t")
+                 # empty members are valid, but no need to process further.
+                 if not member:
+                     continue
+@@ -409,8 +410,7 @@ def from_header(cls, header_list: list[str]) -> TraceState:
+                         member,
+                     )
+                     return cls()
+-                groups: tuple[str, ...] = match.groups()
+-                key, _eq, value = groups
++                key, value = match.groups()
+                 # duplicate keys are not legal in header
+                 if key in pairs:
+                     return cls()

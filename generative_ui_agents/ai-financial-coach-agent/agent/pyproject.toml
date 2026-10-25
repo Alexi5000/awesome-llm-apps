@@ -11,4 +11,8 @@ dependencies = [
   "google-adk",
   "google-genai",
   "ag-ui-adk",
+  "opentelemetry-api==1.44.0+techtide.1",
 ]
+
+[tool.uv.sources]
+opentelemetry-api = { path = "vendor/opentelemetry-api" }
