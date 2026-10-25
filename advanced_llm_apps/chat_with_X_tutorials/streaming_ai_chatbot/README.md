@@ -30,14 +30,20 @@ streaming-ai-chatbot/
 ```bash
 # Clone the repository
 git clone https://github.com/Shubhamsaboo/awesome-llm-apps.git
-cd advanced_llm_apps/chat_with_X_tutorials/chat_with_llms
+cd awesome-llm-apps/advanced_llm_apps/chat_with_X_tutorials/streaming_ai_chatbot
 
 # Install dependencies
-npm install
+npm ci
 
 # Start the development server
 npm run dev
 ```
+
+The committed lockfile preserves the Motia 0.2.2 and OpenAI 4 APIs. Installation
+applies the maintained legacy Zod collection-limit patch documented in
+`patches/README.md`. If lifecycle scripts are disabled, run `npm run patch:zod`
+after installation. Use `npm test`, `npm run generate-types`, `npm run typecheck`,
+and `npm run build` to verify the example without a live provider call.
 
 ### Configure OpenAI API
    ```bash
