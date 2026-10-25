@@ -13,11 +13,34 @@ class DependencyRuntimeTests(unittest.IsolatedAsyncioTestCase):
         configs = []
         for thread in range(4):
             config = {"configurable": {"thread_id": str(thread), "checkpoint_ns": ""}}
-            configs.append(saver.put(config, empty_checkpoint(), {}, {}))
+            checkpoint = empty_checkpoint()
+            checkpoint["channel_values"] = {"messages": "checkpoint payload"}
+            checkpoint["channel_versions"] = {"messages": "1"}
+            saved = saver.put(config, checkpoint, {}, {"messages": "1"})
+            saver.put_writes(saved, [("messages", "pending payload")], "task")
+            configs.append(saved)
         self.assertIsNone(saver.get_tuple(configs[0]))
         self.assertIsNone(saver.get_tuple(configs[1]))
         self.assertIsNotNone(saver.get_tuple(configs[2]))
         self.assertIsNotNone(saver.get_tuple(configs[3]))
+        self.assertEqual(set(saver.storage), {"2", "3"})
+        self.assertEqual({key[0] for key in saver.blobs}, {"2", "3"})
+        self.assertEqual({key[0] for key in saver.writes}, {"2", "3"})
+
+    async def test_async_checkpoint_eviction_cleans_payloads(self):
+        saver = BoundedMemorySaver(max_threads=1)
+        for thread in ("old", "recent"):
+            checkpoint = empty_checkpoint()
+            checkpoint["channel_values"] = {"messages": "async payload"}
+            checkpoint["channel_versions"] = {"messages": "1"}
+            saved = await saver.aput(
+                {"configurable": {"thread_id": thread, "checkpoint_ns": ""}},
+                checkpoint, {}, {"messages": "1"},
+            )
+            await saver.aput_writes(saved, [("messages", "pending payload")], "task")
+        self.assertEqual(set(saver.storage), {"recent"})
+        self.assertEqual({key[0] for key in saver.blobs}, {"recent"})
+        self.assertEqual({key[0] for key in saver.writes}, {"recent"})
 
     def test_upstream_message_tracking_preserves_parallel_lanes(self):
         patches.apply()

@@ -4,7 +4,7 @@ This refresh updates the dependency graphs introduced by the latest catalog sync
 
 The MCP builder now includes the actual upstream CopilotKit logo instead of an unresolved Git LFS pointer. The downloaded bytes match the pointer's SHA-256 (`4f3988438ee1892802f510cb61a264c8493267f4aa62ee31265aa13d22e2e8b7`), retrieved from the original CopilotKit `examples/showcases/open-mcp-client/apps/web/app/image.png` asset. Its archive extraction still rejects parent-relative paths and escaping links. Local archive regression tests cover normal merging and both rejection cases.
 
-The Shadcn agent updates LangChain, LangGraph and AG-UI together. The obsolete message-tracking monkey patch was removed because the current upstream implementation handles cleared messages and concurrent lanes. The remaining checkpoint adapter forwards the new optional configuration argument. Regression tests cover lane isolation, cleared messages, checkpoint configuration and bounded checkpoint eviction.
+The Shadcn agent updates LangChain, LangGraph and AG-UI together. The obsolete message-tracking monkey patch was removed because the current upstream implementation handles cleared messages and concurrent lanes. The remaining checkpoint adapter forwards the new optional configuration argument. Checkpoint eviction calls the upstream thread-deletion API so channel blobs and pending writes are deleted along with checkpoint metadata. Regression tests cover lane isolation, cleared messages, checkpoint configuration and full payload cleanup through both synchronous and asynchronous checkpoint writes.
 
 ## Remaining upstream compatibility constraints
 

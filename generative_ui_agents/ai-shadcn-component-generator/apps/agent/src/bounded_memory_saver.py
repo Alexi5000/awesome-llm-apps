@@ -51,5 +51,5 @@ class BoundedMemorySaver(MemorySaver):
                     oldest_thread,
                     len(self.storage),
                 )
-                del self.storage[oldest_thread]
+                self.delete_thread(oldest_thread)
         return result
