@@ -8,10 +8,12 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
+COPY package.json package-lock.json ./
+COPY scripts/patch-zod.cjs ./scripts/patch-zod.cjs
+COPY patches/ ./patches/
 
 # Install dependencies
-RUN npm install --ignore-scripts
+RUN npm ci --ignore-scripts && npm run patch:zod
 
 # Build the application
 FROM base AS builder

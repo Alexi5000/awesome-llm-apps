@@ -3,8 +3,10 @@ FROM node:20-slim AS frontend
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --ignore-scripts
+COPY package.json package-lock.json ./
+COPY scripts/patch-zod.cjs ./scripts/patch-zod.cjs
+COPY patches/ ./patches/
+RUN npm ci --ignore-scripts && npm run patch:zod
 
 COPY src/ ./src/
 COPY public/ ./public/
