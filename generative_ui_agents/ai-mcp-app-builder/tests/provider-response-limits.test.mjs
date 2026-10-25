@@ -1,15 +1,18 @@
 import assert from 'node:assert/strict';
 import { readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 
 const store = resolve('node_modules/.pnpm');
-const entries = readdirSync(store).filter(name => name.startsWith('@ai-sdk+provider-utils@2.2.8'));
-assert.ok(entries.length > 0);
-for (const entry of entries) {
-const packagePath = resolve(store, entry, 'node_modules/@ai-sdk/provider-utils');
+const consumers = readdirSync(store).filter(name => name.startsWith('@ai-sdk+ui-utils@1.2.11'));
+const packagePaths = [...new Set(consumers.map(name => {
+  const consumerRequire = createRequire(resolve(store, name, 'node_modules/@ai-sdk/ui-utils/package.json'));
+  return dirname(dirname(consumerRequire.resolve('@ai-sdk/provider-utils')));
+}))];
+assert.ok(packagePaths.length > 0);
+for (const packagePath of packagePaths) {
 const require = createRequire(resolve(packagePath, 'package.json'));
 const { z } = require('zod/v3');
 const maxBytes = 2 * 1024 * 1024 * 1024;
@@ -46,6 +49,19 @@ for (const format of ['index.js', 'index.mjs']) {
   });
 
   for (const [name, handler] of Object.entries(handlers)) {
+    test(`${format}: ${name} preserves read failures and releases the lock`, async () => {
+      const failure = new Error('transport read failed');
+      const body = new ReadableStream({ pull(controller) { controller.error(failure); } });
+      await assert.rejects(invoke(handler, new Response(body)), error => error === failure);
+      assert.equal(body.locked, false);
+    });
+    test(`${format}: ${name} preserves size errors when cancellation fails`, async () => {
+      const body = new ReadableStream({ cancel() { throw new Error('cancel failed'); } });
+      await assert.rejects(invoke(handler, new Response(body, {
+        headers: { 'content-length': String(maxBytes + 1) },
+      })), /exceeded maximum size/);
+      assert.equal(body.locked, false);
+    });
     for (const mode of ['declared', 'missing', 'understated']) {
       test(`${format}: ${name} cancels oversized ${mode} bodies`, async () => {
         let cancelled = false;

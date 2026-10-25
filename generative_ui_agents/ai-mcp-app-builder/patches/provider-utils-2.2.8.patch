@@ -8,7 +8,7 @@
 +  const maxBytes = 2 * 1024 * 1024 * 1024;
 +  const declared = Number(response.headers.get("content-length"));
 +  if (Number.isFinite(declared) && declared > maxBytes) {
-+    if (response.body) await response.body.cancel();
++    if (response.body) await response.body.cancel().catch(() => {});
 +    throw new RangeError(`Response from ${url} exceeded maximum size of ${maxBytes} bytes`);
 +  }
 +  if (!response.body) return "";
@@ -26,7 +26,7 @@
 +      chunks.push(value);
 +    }
 +  } finally {
-+    try { await reader.cancel(); } finally { reader.releaseLock(); }
++    try { await reader.cancel(); } catch {} finally { reader.releaseLock(); }
 +  }
 +  const bytes = new Uint8Array(total);
 +  let offset = 0;
@@ -76,7 +76,7 @@
 +  const maxBytes = 2 * 1024 * 1024 * 1024;
 +  const declared = Number(response.headers.get("content-length"));
 +  if (Number.isFinite(declared) && declared > maxBytes) {
-+    if (response.body) await response.body.cancel();
++    if (response.body) await response.body.cancel().catch(() => {});
 +    throw new RangeError(`Response from ${url} exceeded maximum size of ${maxBytes} bytes`);
 +  }
 +  if (!response.body) return "";
@@ -94,7 +94,7 @@
 +      chunks.push(value);
 +    }
 +  } finally {
-+    try { await reader.cancel(); } finally { reader.releaseLock(); }
++    try { await reader.cancel(); } catch {} finally { reader.releaseLock(); }
 +  }
 +  const bytes = new Uint8Array(total);
 +  let offset = 0;
