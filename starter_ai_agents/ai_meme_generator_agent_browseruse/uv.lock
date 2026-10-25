@@ -215,7 +215,7 @@ provides-extras = ["mcp"]
 
 [[package]]
 name = "browser-use"
-version = "0.13.11+techtide.2"
+version = "0.13.11+techtide.3"
 source = { directory = "vendor/browser-use" }
 dependencies = [
     { name = "aiohttp" },

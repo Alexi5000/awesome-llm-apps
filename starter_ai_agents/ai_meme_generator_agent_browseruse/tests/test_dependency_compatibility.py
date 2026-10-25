@@ -73,6 +73,25 @@ class CompatibilityTests(unittest.TestCase):
         for secret in (name, value, missing, url, "password", "private-query"):
             self.assertNotIn(secret, "\n".join(logs.output))
 
+    def test_domain_policy_diagnostics_do_not_expose_inputs(self):
+        from browser_use.utils import match_url_with_domain_pattern
+
+        cases = [
+            ("https://private.example/path?token=sentinel", "*.*.private.example"),
+            ("https://private.example/path?token=sentinel", "private.*"),
+            ("https://private.example/path?token=sentinel", "pri*vate.example"),
+            ("https://[private-invalid-host/path?token=sentinel", "private.example"),
+        ]
+        for url, pattern in cases:
+            with self.subTest(pattern=pattern):
+                with self.assertLogs("browser_use.utils", level="ERROR") as captured:
+                    self.assertFalse(match_url_with_domain_pattern(url, pattern, log_warnings=True))
+                self.assertEqual(len(captured.records), 1)
+                for private in (url, pattern, "private", "sentinel"):
+                    self.assertNotIn(private, captured.records[0].getMessage())
+        self.assertTrue(match_url_with_domain_pattern("https://sub.example.com/path", "*.example.com"))
+        self.assertFalse(match_url_with_domain_pattern("https://example.com.attacker.test", "*.example.com"))
+
     def test_secret_replacement_retains_domain_boundary(self):
         from browser_use.tools.registry.service import Registry
         from pydantic import BaseModel

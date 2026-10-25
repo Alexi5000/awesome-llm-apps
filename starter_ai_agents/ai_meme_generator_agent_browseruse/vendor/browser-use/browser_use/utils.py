@@ -627,14 +627,14 @@ def match_url_with_domain_pattern(url: str, domain_pattern: str, log_warnings: b
 			if pattern_domain.count('*.') > 1 or pattern_domain.count('.*') > 1:
 				if log_warnings:
 					logger = logging.getLogger(__name__)
-					logger.error(f'⛔️ Multiple wildcards in pattern=[{domain_pattern}] are not supported')
+					logger.error('Multiple wildcards in domain patterns are not supported')
 				return False  # Don't match unsafe patterns
 
 			# Check for wildcards in TLD part (example.*)
 			if pattern_domain.endswith('.*'):
 				if log_warnings:
 					logger = logging.getLogger(__name__)
-					logger.error(f'⛔️ Wildcard TLDs like in pattern=[{domain_pattern}] are not supported for security')
+					logger.error('Wildcard top-level domains are not supported')
 				return False  # Don't match unsafe patterns
 
 			# Then check for embedded wildcards
@@ -642,7 +642,7 @@ def match_url_with_domain_pattern(url: str, domain_pattern: str, log_warnings: b
 			if '*' in bare_domain:
 				if log_warnings:
 					logger = logging.getLogger(__name__)
-					logger.error(f'⛔️ Only *.domain style patterns are supported, ignoring pattern=[{domain_pattern}]')
+					logger.error('Only leading subdomain wildcards are supported')
 				return False  # Don't match unsafe patterns
 
 			# Special handling so that *.google.com also matches bare google.com
@@ -658,7 +658,7 @@ def match_url_with_domain_pattern(url: str, domain_pattern: str, log_warnings: b
 		return False
 	except Exception as e:
 		logger = logging.getLogger(__name__)
-		logger.error(f'⛔️ Error matching URL {url} with pattern {domain_pattern}: {type(e).__name__}: {e}')
+		logger.error('Unable to match URL against domain policy')
 		return False
 
 

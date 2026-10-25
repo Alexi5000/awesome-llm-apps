@@ -3,13 +3,14 @@
 These MIT source packages preserve the published browser-use 0.13.11 and
 browser-harness 0.1.13 runtime files and licenses, except for the documented
 browser-use secret-diagnostic patch. Local build versions are
-`0.13.11+techtide.2` and `0.1.13+techtide.1`. Dependency metadata changes:
+`0.13.11+techtide.3` and `0.1.13+techtide.1`. Dependency metadata changes:
 aiohttp 3.14.4, AnyIO 4.14.2, MCP 2.2.0, Pillow 13.0.0 and
 pypdf 6.21.2 replace the vulnerable exact pins, including optional MCP/eval
 pins. Browser-use's exact harness requirement accepts its matching local build.
 
 Browser-use's registry logs only counts of used or missing secret placeholders.
 It no longer logs their labels or page URLs, which may carry private data.
+Domain-policy diagnostics also omit URLs, patterns and exception messages.
 Secret substitution and domain restrictions are unchanged. The provenance
 manifest records both contextual replacements and the original source hash;
 tests reverse the changes and verify that hash as well as installed bytes.
