@@ -10,7 +10,8 @@
     "lint": "turbo run lint",
     "clean": "rm -rf node_modules apps/*/node_modules apps/*/.turbo .turbo",
     "fresh": "pnpm clean && pnpm i",
-    "test:provider-response-limits": "node --test tests/provider-response-limits.test.mjs"
+    "test:provider-response-limits": "node --test tests/provider-response-limits.test.mjs",
+    "test:collection-limits": "node --test tests/zod-collection-limits.test.mjs"
   },
   "devDependencies": {
     "eslint": "^9.39.5",
@@ -46,7 +47,9 @@
       "@ai-sdk/provider-utils-v6": "npm:@ai-sdk/provider-utils@4.0.62"
     },
     "patchedDependencies": {
-      "@ai-sdk/provider-utils@2.2.8": "patches/provider-utils-2.2.8.patch"
+      "@ai-sdk/provider-utils@2.2.8": "patches/provider-utils-2.2.8.patch",
+      "zod@3.25.76": "patches/zod@3.25.76.patch",
+      "zod@4.6.7": "patches/zod@4.6.7.patch"
     }
   }
 }

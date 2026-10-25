@@ -16,7 +16,8 @@
     "prebuild": "npm run patch:zod",
     "prestart": "npm run patch:zod",
     "predev": "npm run patch:zod",
-    "predev:ui": "npm run patch:zod"
+    "predev:ui": "npm run patch:zod",
+    "predev:debug": "npm run patch:zod"
   },
   "dependencies": {
     "@copilotkit/a2ui-renderer": "^1.80.0",
