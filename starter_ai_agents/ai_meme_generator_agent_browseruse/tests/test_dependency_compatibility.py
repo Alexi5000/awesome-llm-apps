@@ -33,6 +33,12 @@ class CompatibilityTests(unittest.TestCase):
             self.assertEqual((root / "pyproject.toml").read_text(), expected)
             for file, digest in provenance["files"].items():
                 self.assertEqual(hashlib.sha256((root / file).read_bytes()).hexdigest(), digest, file)
+            for file, patch in provenance.get("source_patches", {}).items():
+                original = (root / file).read_text()
+                for old, new in reversed(patch["replacements"]):
+                    self.assertEqual(original.count(new), 1)
+                    original = original.replace(new, old)
+                self.assertEqual(hashlib.sha256(original.encode()).hexdigest(), patch["original_sha256"])
             prefixes = ("browser_use/",) if name == "browser-use" else ("src/browser_harness/", "src/mcp_server.py")
             actual = {
                 str(file.relative_to(root)) for file in root.rglob("*")
@@ -40,7 +46,48 @@ class CompatibilityTests(unittest.TestCase):
                 and str(file.relative_to(root)).startswith(prefixes)
             }
             self.assertEqual(actual, {file for file in provenance["files"] if file.startswith(prefixes)})
-            self.assertEqual(importlib.metadata.version(name), provenance["version"] + "+techtide.1")
+            self.assertEqual(importlib.metadata.version(name), provenance.get("local_version", provenance["version"] + "+techtide.1"))
+
+    def test_secret_replacement_logs_no_names_values_or_urls(self):
+        from browser_use.tools.registry.service import Registry
+        from pydantic import BaseModel
+
+        class Params(BaseModel):
+            text: str
+
+        registry = Registry()
+        name = "private-account-name"
+        value = "private-value-sentinel"
+        missing = "private-missing-name"
+        url = "https://user:password@example.com/private-path?token=private-query#private-fragment"
+        with self.assertLogs("browser_use.tools.registry.service", level="INFO") as logs:
+            result = registry._replace_sensitive_data(
+                Params(text=f"<secret>{name}</secret> <secret>{missing}</secret>"),
+                {name: value}, url,
+            )
+        self.assertEqual(result.text, f"{value} <secret>{missing}</secret>")
+        self.assertEqual([record.getMessage() for record in logs.records], [
+            "Using sensitive data placeholders (count=1)",
+            "Missing or empty sensitive data placeholders (count=1)",
+        ])
+        for secret in (name, value, missing, url, "password", "private-query"):
+            self.assertNotIn(secret, "\n".join(logs.output))
+
+    def test_secret_replacement_retains_domain_boundary(self):
+        from browser_use.tools.registry.service import Registry
+        from pydantic import BaseModel
+
+        class Params(BaseModel):
+            text: str
+
+        registry = Registry()
+        params = Params(text="<secret>account</secret>")
+        secrets = {"https://allowed.example": {"account": "test-private-value"}}
+        with self.assertLogs("browser_use.tools.registry.service", level="INFO"):
+            allowed = registry._replace_sensitive_data(params, secrets, "https://allowed.example/path")
+            denied = registry._replace_sensitive_data(params, secrets, "https://other.example/path")
+        self.assertEqual(allowed.text, "test-private-value")
+        self.assertEqual(denied.text, params.text)
 
         for name, version in {
             "aiohttp": "3.14.4", "anyio": "4.14.2", "mcp": "2.2.0",

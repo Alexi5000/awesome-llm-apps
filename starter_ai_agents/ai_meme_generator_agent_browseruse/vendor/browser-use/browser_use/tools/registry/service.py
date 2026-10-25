@@ -421,8 +421,7 @@ class Registry(Generic[Context]):
 	def _log_sensitive_data_usage(self, placeholders_used: set[str], current_url: str | None) -> None:
 		"""Log when sensitive data is being used on a page"""
 		if placeholders_used:
-			url_info = f' on {current_url}' if current_url and not is_new_tab_page(current_url) else ''
-			logger.info(f'🔒 Using sensitive data placeholders: {", ".join(sorted(placeholders_used))}{url_info}')
+			logger.info('Using sensitive data placeholders (count=%d)', len(placeholders_used))
 
 	def _replace_sensitive_data(
 		self, params: BaseModel, sensitive_data: dict[str, Any], current_url: str | None = None
@@ -511,7 +510,7 @@ class Registry(Generic[Context]):
 
 		# Log a warning if any placeholders are missing
 		if all_missing_placeholders:
-			logger.warning(f'Missing or empty keys in sensitive_data dictionary: {", ".join(all_missing_placeholders)}')
+			logger.warning('Missing or empty sensitive data placeholders (count=%d)', len(all_missing_placeholders))
 
 		return type(params).model_validate(processed_params)
 
