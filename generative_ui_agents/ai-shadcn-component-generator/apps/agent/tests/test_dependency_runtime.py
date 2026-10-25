@@ -19,13 +19,13 @@ class DependencyRuntimeTests(unittest.IsolatedAsyncioTestCase):
             saved = saver.put(config, checkpoint, {}, {"messages": "1"})
             saver.put_writes(saved, [("messages", "pending payload")], "task")
             configs.append(saved)
+        self.assertEqual(set(saver.storage), {"2", "3"})
+        self.assertEqual({key[0] for key in saver.blobs}, {"2", "3"})
+        self.assertEqual({key[0] for key in saver.writes}, {"2", "3"})
         self.assertIsNone(saver.get_tuple(configs[0]))
         self.assertIsNone(saver.get_tuple(configs[1]))
         self.assertIsNotNone(saver.get_tuple(configs[2]))
         self.assertIsNotNone(saver.get_tuple(configs[3]))
-        self.assertEqual(set(saver.storage), {"2", "3"})
-        self.assertEqual({key[0] for key in saver.blobs}, {"2", "3"})
-        self.assertEqual({key[0] for key in saver.writes}, {"2", "3"})
 
     async def test_async_checkpoint_eviction_cleans_payloads(self):
         saver = BoundedMemorySaver(max_threads=1)
