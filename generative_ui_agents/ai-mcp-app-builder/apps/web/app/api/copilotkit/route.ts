@@ -3,7 +3,7 @@ import {
   ExperimentalEmptyAdapter,
   copilotRuntimeNextJSAppRouterEndpoint,
 } from "@copilotkit/runtime";
-import { BuiltInAgent, defineTool } from "@copilotkit/runtime/v2";
+import { BuiltInAgent, defineTool, type BuiltInAgentClassicConfig } from "@copilotkit/runtime/v2";
 import { z } from "zod";
 import { NextRequest } from "next/server";
 import { MCPAppsMiddleware, getServerHash } from "@ag-ui/mcp-apps-middleware";
@@ -583,9 +583,7 @@ export const POST = async (req: NextRequest) => {
     model: "openai/gpt-5.5",
     prompt: AGENT_SYSTEM_PROMPT,
     // Cast: defineTool() returns specific Zod types; BuiltInAgent expects ToolDefinition<ZodTypeAny>[]
-    tools: workspaceTools as unknown as ConstructorParameters<
-      typeof BuiltInAgent
-    >[0]["tools"],
+    tools: workspaceTools as unknown as BuiltInAgentClassicConfig["tools"],
   });
 
   agent.use(middleware);

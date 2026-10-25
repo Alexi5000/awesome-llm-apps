@@ -1,0 +1,83 @@
+name: Generative example dependency runtime
+on:
+  pull_request:
+    paths:
+      - 'generative_ui_agents/**'
+      - 'tests/generative_runtime_smoke.py'
+      - '.github/workflows/generative-runtime.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'generative_ui_agents/**'
+      - 'tests/generative_runtime_smoke.py'
+      - '.github/workflows/generative-runtime.yml'
+permissions:
+  contents: read
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        directory:
+          - ai-dashboard-canvas-agent
+          - ai-deep-research-agent
+          - ai-financial-coach-agent
+          - ai-knowledge-explorer
+          - generative-ui-starter-project
+          - mcp-apps-generative-ui-showcase
+          - mcp-apps-generative-ui-showcase/mcp-server
+          - ai-mcp-app-builder
+    defaults:
+      run:
+        working-directory: generative_ui_agents/${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+      - run: corepack enable
+      - name: Install locked dependencies
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install --frozen-lockfile --ignore-scripts
+          else
+            npm ci --ignore-scripts
+          fi
+      - name: Compile production example
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm run build
+          else
+            npm run build
+          fi
+      - name: Verify full-kit archive boundaries
+        if: matrix.directory == 'ai-mcp-app-builder'
+        run: pnpm --filter web test:download-kit
+  agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        directory:
+          - ai-deep-research-agent/agent
+          - ai-financial-coach-agent/agent
+          - ai-knowledge-explorer/agent
+          - generative-ui-starter-project/agent
+          - ai-shadcn-component-generator/apps/agent
+    defaults:
+      run:
+        working-directory: generative_ui_agents/${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          python-version: '3.12'
+      - run: uv sync --frozen
+      - name: Construct agent with provider network disabled
+        run: uv run --frozen python "$GITHUB_WORKSPACE/tests/generative_runtime_smoke.py"
+      - name: Check adapter and checkpoint compatibility
+        if: matrix.directory == 'ai-shadcn-component-generator/apps/agent'
+        run: uv run --frozen python -m unittest discover -s tests -v

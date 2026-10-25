@@ -12,8 +12,32 @@
     "fresh": "pnpm clean && pnpm i"
   },
   "devDependencies": {
-    "eslint": "^9.39.1",
-    "turbo": "^2.3.3"
+    "eslint": "^9.39.5",
+    "turbo": "^2.11.10"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.13.1",
+  "pnpm": {
+    "overrides": {
+      "@fastify/busboy@^3": "^3.2.2",
+      "uuid@>=9 <11": "^11.1.1",
+      "katex": "^0.18.2",
+      "@a2ui/web_core": "^0.10.2",
+      "undici@>=5 <7": "^6.29.1",
+      "postcss-selector-parser": "^7.1.6",
+      "prismjs": "^1.30.0",
+      "postcss": "^8.5.23",
+      "hono": "^4.13.11",
+      "@hono/node-server@^1": "^1.19.15",
+      "@modelcontextprotocol/sdk@^1": "^1.32.2",
+      "@modelcontextprotocol/client@^2": "^2.3.0",
+      "@modelcontextprotocol/server@^2": "^2.3.0",
+      "@modelcontextprotocol/server-legacy@^2": "^2.3.1",
+      "@opentelemetry/core@^2": "^2.8.0",
+      "lodash": "^4.18.0",
+      "react-router@^7": "^7.18.4",
+      "@ag-ui/client": "1.0.3",
+      "@ag-ui/core": "1.0.3",
+      "@ag-ui/encoder": "1.0.3"
+    }
+  }
 }
