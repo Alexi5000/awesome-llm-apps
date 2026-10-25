@@ -10,7 +10,13 @@
     "build": "next build",
     "start": "next start",
     "install:agent": "./scripts/setup-agent.sh || scripts\\setup-agent.bat",
-    "postinstall": "npm run install:agent"
+    "postinstall": "npm run patch:zod && npm run install:agent",
+    "patch:zod": "node scripts/patch-zod.cjs",
+    "test:collection-limits": "node --test tests/zod-collection-limits.test.mjs tests/zod-patch-applicator.test.mjs",
+    "prebuild": "npm run patch:zod",
+    "prestart": "npm run patch:zod",
+    "predev": "npm run patch:zod",
+    "predev:ui": "npm run patch:zod"
   },
   "dependencies": {
     "@copilotkit/a2ui-renderer": "^1.80.0",
@@ -32,7 +38,8 @@
     "react18-json-view": "^0.2.9",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.5.0",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "@ag-ui/client": "1.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

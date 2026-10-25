@@ -19,7 +19,7 @@ https://github.com/user-attachments/assets/68d5729f-91f9-4fd9-a579-cd1a8f4aad8d
 1. Install Node dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 2. Install Python dependencies for the agent:
@@ -98,3 +98,7 @@ Deep Agent (research_assistant)
 ## License
 
 Upstream license applies — see [`CopilotKit/CopilotKit`](https://github.com/CopilotKit/CopilotKit).
+
+## Maintained schema safety patch
+
+Use the committed npm lockfile and retain the [schema patch instructions](patches/README.md). After `npm ci --ignore-scripts`, run `npm run patch:zod` before invoking Next directly. `npm run test:collection-limits` verifies the installed consumers without provider calls.

@@ -3,8 +3,10 @@ FROM node:20-slim AS frontend
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --ignore-scripts
+COPY package.json package-lock.json ./
+COPY scripts/patch-zod.cjs ./scripts/patch-zod.cjs
+COPY patches/ ./patches/
+RUN npm ci --ignore-scripts && npm run patch:zod
 
 COPY src/ ./src/
 COPY public/ ./public/
@@ -16,7 +18,6 @@ COPY showcase.json ./showcase.json
 # Next.js 16+ rejects both /api/copilotkit/route.ts AND /api/copilotkit/[[...slug]]/route.ts
 RUN rm -f ./src/app/api/copilotkit/\[\[...slug\]\]/route.ts
 COPY docker-route-override.ts ./src/app/api/copilotkit/route.ts
-RUN npm install @ag-ui/client
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 # Next.js 16+ uses Turbopack by default; use --webpack for serverExternalPackages compat

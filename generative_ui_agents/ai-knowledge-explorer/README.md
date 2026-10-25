@@ -41,7 +41,7 @@ Click a node to see details. Double-click to expand it — the agent extracts su
 
 ```bash
 # 1. Install dependencies (also runs `uv sync` for the Python agent)
-npm install
+npm ci
 
 # 2. Set your API key
 cp .env.example .env
@@ -108,3 +108,7 @@ ai-knowledge-explorer/
 ├── package.json
 └── .env.example
 ```
+
+## Maintained schema safety patch
+
+Use the committed npm lockfile and retain the [schema patch instructions](patches/README.md). After `npm ci --ignore-scripts`, run `npm run patch:zod` before invoking Next directly. `npm run test:collection-limits` verifies the installed consumers without provider calls.

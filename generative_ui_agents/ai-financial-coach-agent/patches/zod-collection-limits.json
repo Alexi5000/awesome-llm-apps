@@ -1,0 +1,126 @@
+{
+  "upstream_fix": "https://github.com/colinhacks/zod/commit/a0ebf970f2d752e5f58527cd2942ff48be4f46bd",
+  "advisory": "GHSA-mrhx-c7xc-m3w5",
+  "versions": {
+    "3.25.76": {
+      "integrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==",
+      "tarball": "https://registry.npmjs.org/zod/-/zod-3.25.76.tgz",
+      "files": {
+        "src/v3/types.ts": {
+          "before": "70309a0877c35d036842e291fe7c8a4439d5db49411d233f8a22bf8a59c41419",
+          "after": "43e7d808270d2521f9969d81fcddce1df165618483454b72d0c19df98f6e61f3",
+          "edits": [
+            {
+              "from": "          exact: true,\n          message: def.exactLength.message,\n        });\n        status.dirty();\n      }\n    }\n",
+              "to": "          exact: true,\n          message: def.exactLength.message,\n        });\n        if (tooBig) return INVALID;\n        status.dirty();\n      }\n    }\n"
+            },
+            {
+              "from": "          exact: false,\n          message: def.maxLength.message,\n        });\n        status.dirty();\n      }\n    }\n\n",
+              "to": "          exact: false,\n          message: def.maxLength.message,\n        });\n        return INVALID;\n      }\n    }\n\n"
+            },
+            {
+              "from": "          exact: false,\n          message: def.maxSize.message,\n        });\n        status.dirty();\n      }\n    }\n\n",
+              "to": "          exact: false,\n          message: def.maxSize.message,\n        });\n        return INVALID;\n      }\n    }\n\n"
+            }
+          ]
+        },
+        "v3/types.cjs": {
+          "before": "06487cc05ed45c5dd29789bf0aa75734d1ce06592a7f2665ba4ca90a68e8a3e1",
+          "after": "674e29beb1bafb0ac61ad688431322e9397ab9b91272173f19dcf11e310f8e3a",
+          "edits": [
+            {
+              "from": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                status.dirty();\n            }\n        }\n",
+              "to": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                if (tooBig) return parseUtil_js_1.INVALID;\n                status.dirty();\n            }\n        }\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n",
+              "to": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                return parseUtil_js_1.INVALID;\n            }\n        }\n        if (ctx.common.async) {\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "to": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return parseUtil_js_1.INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        },
+        "v3/types.js": {
+          "before": "9763a2938f0e7f983363ef4bf6530e7583e3f2d54f8a4a6684efad58febc6e8e",
+          "after": "7b994f7652ae24855e9fe3066de3463f9bfd1083ca7d56d22434942fcddfbffe",
+          "edits": [
+            {
+              "from": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                status.dirty();\n            }\n        }\n",
+              "to": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                if (tooBig) return INVALID;\n                status.dirty();\n            }\n        }\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n",
+              "to": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                return INVALID;\n            }\n        }\n        if (ctx.common.async) {\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "to": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        }
+      }
+    },
+    "4.6.7": {
+      "integrity": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==",
+      "tarball": "https://registry.npmjs.org/zod/-/zod-4.6.7.tgz",
+      "files": {
+        "src/v3/types.ts": {
+          "before": "73b9529564a34fc028a5a62c17e09148747b737039b78b124e84254cb886411a",
+          "after": "6951412f7d0ac358d141ab62ba9a02d771ca2afb9b8035e97f842670e40ad7e8",
+          "edits": [
+            {
+              "from": "          exact: true,\n          message: def.exactLength.message,\n        });\n        status.dirty();\n      }\n    }\n",
+              "to": "          exact: true,\n          message: def.exactLength.message,\n        });\n        if (tooBig) return INVALID;\n        status.dirty();\n      }\n    }\n"
+            },
+            {
+              "from": "          exact: false,\n          message: def.maxLength.message,\n        });\n        status.dirty();\n      }\n    }\n\n",
+              "to": "          exact: false,\n          message: def.maxLength.message,\n        });\n        return INVALID;\n      }\n    }\n\n"
+            },
+            {
+              "from": "          exact: false,\n          message: def.maxSize.message,\n        });\n        status.dirty();\n      }\n    }\n\n",
+              "to": "          exact: false,\n          message: def.maxSize.message,\n        });\n        return INVALID;\n      }\n    }\n\n"
+            }
+          ]
+        },
+        "v3/types.cjs": {
+          "before": "7a2f06d88e280bdd198c60e0d292ed7f1e3993e877be4415de07e6abc7746dd1",
+          "after": "1fea7372e34fb34f0e0c7c9c2196d0109be74f532e807576ab016104d9c7d2c5",
+          "edits": [
+            {
+              "from": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                status.dirty();\n            }\n        }\n",
+              "to": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                if (tooBig) return parseUtil_js_1.INVALID;\n                status.dirty();\n            }\n        }\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n",
+              "to": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                return parseUtil_js_1.INVALID;\n            }\n        }\n        if (ctx.common.async) {\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "to": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return parseUtil_js_1.INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        },
+        "v3/types.js": {
+          "before": "d7214e1dacf9e6e70c9ca80247717b4be13b240510428fef132b7da3260d1a32",
+          "after": "de43f14f82c8e8501e2b176d2cea024e784cf8696ba4f2601044c02492a38f8a",
+          "edits": [
+            {
+              "from": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                status.dirty();\n            }\n        }\n",
+              "to": "                    exact: true,\n                    message: def.exactLength.message,\n                });\n                if (tooBig) return INVALID;\n                status.dirty();\n            }\n        }\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                status.dirty();\n            }\n        }\n        if (ctx.common.async) {\n",
+              "to": "                    exact: false,\n                    message: def.maxLength.message,\n                });\n                return INVALID;\n            }\n        }\n        if (ctx.common.async) {\n"
+            },
+            {
+              "from": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                status.dirty();\n            }\n        }\n        const valueType = this._def.valueType;\n",
+              "to": "                    exact: false,\n                    message: def.maxSize.message,\n                });\n                return INVALID;\n            }\n        }\n        const valueType = this._def.valueType;\n"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
