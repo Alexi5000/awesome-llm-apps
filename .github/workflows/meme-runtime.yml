@@ -35,6 +35,17 @@ jobs:
           python-version: ${{ matrix.python }}
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
         if: matrix.installer == 'uv'
+      - name: Verify hosted browser executable
+        run: |
+          python - <<'PYCODE'
+          import shutil, subprocess
+          for name in ("chromium", "google-chrome"):
+              executable = shutil.which(name)
+              print(name, executable, flush=True)
+              if executable:
+                  result = subprocess.run([executable, "--version"], capture_output=True, text=True, timeout=15)
+                  print(result.returncode, result.stdout, result.stderr, flush=True)
+          PYCODE
       - run: uv sync --frozen --group test
         if: matrix.installer == 'uv'
       - run: uv pip check
