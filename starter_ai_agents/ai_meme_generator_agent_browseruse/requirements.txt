@@ -1,2 +1,3 @@
-streamlit==1.54.0
-browser-use==0.13.11
+streamlit==1.66.1
+./vendor/browser-use
+./vendor/browser-harness

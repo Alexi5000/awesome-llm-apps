@@ -1,0 +1,34 @@
+{
+  "upstream": "browser-harness",
+  "version": "0.1.13",
+  "sdist_url": "https://files.pythonhosted.org/packages/7f/fe/59ab493e7cf76731a7f5aabae3821eea6ea82a628c14c30e7aed48adc362/browser_harness-0.1.13.tar.gz",
+  "sdist_sha256": "284dc547a042c309feafd9a9f4a74b2a8651b7963ea3ac6cb2f2d64889f6a8f3",
+  "metadata_replacements": {
+    "version = \"0.1.13\"": "version = \"0.1.13+techtide.1\"",
+    "pillow==12.3.0": "pillow==13.0.0",
+    "mcp==2.1.1": "mcp==2.2.0"
+  },
+  "upstream_pyproject_sha256": "c861880e2629ce6355ff645f5977aecad0ccc8950a211d6fe7ba13420a396f98",
+  "files": {
+    "LICENSE": "5afa3d97bf1e6f998d587fa101e3fe0d0c416840b7fe77bcd6ae97690a334631",
+    "README.md": "ee3cdce98e1163125222e61895228faeb188b100b61347369923be250105aab9",
+    "setup.cfg": "1c473cbaee8da5fc46e7f0158794af5cea4414c34a3cf3f180c2001f5e38bd3e",
+    "src/browser_harness/SKILL.md": "2155ce650490e214734b2ea2f3b23f9dd12addedd0382e048a8e9d805ab507a7",
+    "src/browser_harness/__init__.py": "b159e84a2701448a4905041f48b27bf6d26cc420b597b82e4fdeabbd7fe26c2f",
+    "src/browser_harness/_ipc.py": "b46ec6e55ddae9919ada069053dfa12a2555d33a832de57ef5eb3a457cec80b3",
+    "src/browser_harness/admin.py": "d2d21c753f06e9275ce32291ca7e2c20acb83fab50486fffdbbfbb0fb1a7da94",
+    "src/browser_harness/auth.py": "e71acf31c28524f4b26f87770333d154c2182b70a9412be5276d982fa6c2cf9d",
+    "src/browser_harness/daemon.py": "7f05f904e62af8c07153c34a1fd3d334acf5c5aded8d0ddab974596bb50a8c97",
+    "src/browser_harness/helpers.py": "5ea8560a01b74281833923720ffd23ca8e4f6b873c2419c821f7695a04091cf3",
+    "src/browser_harness/macos.py": "e7fb08ba92af6976a58c6abc91e36eb625b978102ba03fee8f9f5911c88f5a74",
+    "src/browser_harness/mcp_cli.py": "11d66e3168436bf9bf49c2ddd301c19ac7bed9e717fc907fbb5ff61c7c160ece",
+    "src/browser_harness/paths.py": "ba3c6e4c91a8e5f8add837eedd51a1aa391f47a7d11c79db47ac8b8146267ad7",
+    "src/browser_harness/recorder.py": "ccf987870ab88cff7dbefe586165eaac122bba53dc73813e8202d65c840814e8",
+    "src/browser_harness/run.py": "cf2f5e52596c45686f0b4d606b89bce10a153293d2205523bfb246d161dc07b7",
+    "src/browser_harness/telemetry.py": "8d48b95afe4b149c2be115e0df18dd9f62496148a194277702d74829455cfa94",
+    "src/browser_harness/video-template.html": "e237f67c2636e6946fd853c286fba0df0e7b10cfa2c95d4a9bb08fdd9d24e933",
+    "src/browser_harness/video.py": "6112a7582cfc71f7a8db9d8c0f703cbbf6ec47b5c5464564725154ffc3e41142",
+    "src/browser_harness/video_render.py": "96a2a69d3653d47f8a2de1b4b51d1b7deca4a12d163e03d7f4afcc262b2e4e04",
+    "src/mcp_server.py": "8b11bc6058098329b6badc14982ffa9fb0fea5d2be24e8819fb9e73e3512fa32"
+  }
+}
