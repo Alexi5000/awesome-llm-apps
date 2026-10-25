@@ -7,6 +7,7 @@ WORKDIR /app
 
 # Copy workspace root manifests first (cache layer)
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml turbo.json ./
+COPY patches ./patches
 COPY .env.example .env.example
 COPY apps/web/package.json apps/web/package.json
 COPY apps/mcp-use-server/package.json apps/mcp-use-server/package.json

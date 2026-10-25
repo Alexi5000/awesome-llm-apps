@@ -12,12 +12,16 @@ An agent that populates **live charts, metrics, and real-time data** into a Canv
 
 ## 🔧 Quickstart
 
+Use the pinned pnpm version and lockfile: the install applies the maintained
+legacy Zod collection-limit patches in `patches/`. Other package managers do not
+apply these pnpm patches.
+
 ```bash
 # from the awesome-llm-apps repo root
 cd generative_ui_agents/ai-dashboard-canvas-agent
 
 # install JS deps + agent
-pnpm install        # or npm/yarn/bun
+pnpm install --frozen-lockfile
 
 # install Python deps separately for the ADK agent
 pnpm install:agent
