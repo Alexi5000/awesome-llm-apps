@@ -23,9 +23,13 @@ Book flights, reserve hotels, manage portfolios, and run a kanban board — all 
 
 ### 1. Install Dependencies
 
+Use the pinned pnpm version for the UI: its lockfile applies the maintained
+legacy Zod collection-limit patches in `patches/`. The separate MCP server keeps
+its npm installation.
+
 ```bash
 # From the mcp-apps directory
-npm install
+pnpm install --frozen-lockfile
 
 cd mcp-server
 npm install

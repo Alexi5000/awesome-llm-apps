@@ -58,6 +58,22 @@ jobs:
       - name: Verify legacy provider response limits
         if: matrix.directory == 'ai-mcp-app-builder'
         run: pnpm test:provider-response-limits
+      - name: Verify legacy schema collection limits
+        if: matrix.directory == 'ai-mcp-app-builder' || matrix.directory == 'ai-dashboard-canvas-agent' || matrix.directory == 'mcp-apps-generative-ui-showcase'
+        run: pnpm test:collection-limits
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        directory:
+          - ai-mcp-app-builder
+          - mcp-apps-generative-ui-showcase
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build patched production container
+        run: docker build --tag "example:${{ matrix.directory }}" "generative_ui_agents/${{ matrix.directory }}"
   agent:
     runs-on: ubuntu-latest
     timeout-minutes: 15

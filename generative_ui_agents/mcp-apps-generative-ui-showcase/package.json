@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:collection-limits": "node --test tests/zod-collection-limits.test.mjs"
   },
   "dependencies": {
     "@ag-ui/client": "^1.0.3",
@@ -42,6 +43,10 @@
       "@ag-ui/client": "1.0.3",
       "@ag-ui/core": "1.0.3",
       "@ag-ui/encoder": "1.0.3"
+    },
+    "patchedDependencies": {
+      "zod@3.25.76": "patches/zod@3.25.76.patch",
+      "zod@4.6.7": "patches/zod@4.6.7.patch"
     }
   },
   "packageManager": "pnpm@10.13.1"
