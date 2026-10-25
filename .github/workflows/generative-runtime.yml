@@ -55,6 +55,9 @@ jobs:
       - name: Verify full-kit archive boundaries
         if: matrix.directory == 'ai-mcp-app-builder'
         run: pnpm --filter web test:download-kit
+      - name: Verify legacy provider response limits
+        if: matrix.directory == 'ai-mcp-app-builder'
+        run: pnpm test:provider-response-limits
   agent:
     runs-on: ubuntu-latest
     timeout-minutes: 15
