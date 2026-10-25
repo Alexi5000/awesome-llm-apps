@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         include:
           - python: '3.11'
@@ -25,6 +26,7 @@ jobs:
     env:
       ANONYMIZED_TELEMETRY: 'false'
       BROWSER_USE_DISABLE_CLOUD: 'true'
+      BROWSER_EXECUTABLE_PATH: /usr/bin/google-chrome
     defaults:
       run:
         working-directory: starter_ai_agents/ai_meme_generator_agent_browseruse
