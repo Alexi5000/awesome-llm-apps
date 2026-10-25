@@ -6,7 +6,15 @@
     "dev:debug": "motia dev --debug",
     "generate-types": "motia generate-types",
     "build": "motia build",
-    "clean": "rm -rf dist node_modules python_modules .motia .mermaid"
+    "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
+    "patch:zod": "node scripts/patch-zod.cjs",
+    "postinstall": "npm run patch:zod",
+    "prebuild": "npm run patch:zod",
+    "predev": "npm run patch:zod",
+    "predev:debug": "npm run patch:zod",
+    "pregenerate-types": "npm run patch:zod",
+    "test": "node --test tests/*.test.cjs tests/*.test.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "motia",
