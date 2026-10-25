@@ -11,19 +11,15 @@ https://github.com/user-attachments/assets/47761912-d46a-4fb3-b9bd-cb41ddd02e34
 - Node.js 18+
 - Python 3.8+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
-- Any of the following package managers:
-  - npm (default)
-  - [pnpm](https://pnpm.io/installation)
-  - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
-  - [bun](https://bun.sh/)
+- npm (required by the committed lockfile and maintained schema patch)
 - OpenAI API Key (for the LangGraph agent)
 
 ## Getting Started
 
-1. Install dependencies (npm, or pnpm/yarn/bun):
+1. Install dependencies using the committed npm lockfile:
 
 ```bash
-npm install
+npm ci
 ```
 
 This will also install the Python agent dependencies via `uv sync`.
@@ -160,3 +156,7 @@ Both patterns use the same catalog on the frontend — the difference is where t
 
 - [LangGraph Documentation](https://langchain-ai.github.io/langgraph/) - Learn more about LangGraph and its features
 - [CopilotKit Documentation](https://docs.copilotkit.ai) - Explore CopilotKit's capabilities
+
+## Maintained schema safety patch
+
+Use the committed npm lockfile and retain the [schema patch instructions](patches/README.md). After `npm ci --ignore-scripts`, run `npm run patch:zod` before invoking Next directly. `npm run test:collection-limits` verifies the installed consumers without provider calls.

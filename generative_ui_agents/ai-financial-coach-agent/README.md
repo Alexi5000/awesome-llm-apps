@@ -11,18 +11,14 @@ https://github.com/user-attachments/assets/edd4fa8d-ecc5-4b5d-90ff-27b21af5af94
 - Node.js 18+
 - Python 3.12+
 - Google Makersuite API Key (for the ADK agent) (see https://makersuite.google.com/app/apikey)
-- Any of the following package managers:
-  - npm (default)
-  - [pnpm](https://pnpm.io/installation)
-  - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
-  - [bun](https://bun.sh/)
+- npm (required by the committed lockfile and maintained schema patch)
 
 ## Getting Started
 
-1. Install dependencies (npm, or pnpm/yarn/bun):
+1. Install dependencies using the committed npm lockfile:
 
 ```bash
-npm install
+npm ci
 ```
 
 2. Install Python dependencies for the ADK agent:
@@ -78,3 +74,7 @@ The main UI component is in `src/app/page.tsx`. You can:
 - [ADK Documentation](https://google.github.io/adk-docs/) - Learn more about the ADK and its features
 - [CopilotKit Documentation](https://docs.copilotkit.ai) - Explore CopilotKit's capabilities
 - [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
+
+## Maintained schema safety patch
+
+Use the committed npm lockfile and retain the [schema patch instructions](patches/README.md). After `npm ci --ignore-scripts`, run `npm run patch:zod` before invoking Next directly. `npm run test:collection-limits` verifies the installed consumers without provider calls.
