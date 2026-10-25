@@ -45,9 +45,9 @@ API keys required:
     ```bash
     pip install -r requirements.txt
     ```
-    Install Chromium for Browser Use (Python 3.12 or newer):
+    Install Chromium using the installed Browser Use CLI:
     ```bash
-    uvx browser-use install
+    browser-use install
     ```
 3. **Run the Streamlit app**:
     ```bash
@@ -68,11 +68,36 @@ You can also run this project using [uv](https://docs.astral.sh/uv/), a fast Pyt
     ```bash
     uv sync
     ```
-    Install `playwright`'s browser binaries if needed:
+    Install Chromium if needed:
     ```bash
-    uv run playwright install --with-deps
+    uv run browser-use install
     ```
 3. **Run the Streamlit app**:
     ```bash
     uv run streamlit run ai_meme_generator_agent.py
     ```
+
+### Dependency compatibility checks
+
+This app includes maintained browser-use and browser-harness source packages
+with patched dependency pins; keep `vendor/` when copying the app. The uv lock
+targets Python 3.11; the pip installation is also tested on Python 3.12.
+See [vendor/README.md](vendor/README.md) for provenance and removal criteria.
+
+With Chromium or Chrome installed, run either:
+
+```bash
+uv sync --frozen --group test
+uv run --frozen --group test python -m unittest discover -s tests -v
+```
+
+or, in a Python 3.12 virtual environment:
+
+```bash
+python -m pip install -r requirements-test.txt
+python -m pip check
+python -m unittest discover -s tests -v
+```
+
+Set `BROWSER_EXECUTABLE_PATH` if the browser is not on PATH. The compatibility
+tests use only local pages and local MCP servers; they need no provider keys.

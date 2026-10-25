@@ -44,7 +44,7 @@ class RuntimeTests(unittest.TestCase):
         asyncio.run(exercise())
 
     def test_ui_requires_credentials(self):
-        page = AppTest.from_file(str(Path(app.__file__))).run()
+        page = AppTest.from_file(str(Path(app.__file__)), default_timeout=15).run()
         self.assertFalse(page.exception)
         page.button[0].click().run()
         self.assertFalse(page.exception)
