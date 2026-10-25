@@ -1,4 +1,4 @@
-import { createReadStream, existsSync } from "fs";
+import { createReadStream, existsSync, type Stats } from "fs";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -19,12 +19,14 @@ export function getBaseKitPath(): string | null {
  * `apps/mcp-use-server` with the sandbox tree, and returns a gzip tarball stream.
  * Caller should destroy the stream or wait for `close` so temp dirs can be removed.
  */
-function validateArchiveEntry(name: string, entry: tar.ReadEntry): boolean {
+function validateArchiveEntry(name: string, entry: tar.ReadEntry | Stats): boolean {
+  if (!("type" in entry)) return false;
   if (path.posix.isAbsolute(name) || name.split("/").includes("..") || name.includes("\\")) {
     return false;
   }
   if (entry.type === "SymbolicLink" || entry.type === "Link") {
     const link = entry.linkpath;
+    if (typeof link !== "string" || !link) return false;
     const target = path.posix.normalize(entry.type === "Link" ? link : path.posix.join(path.posix.dirname(name), link));
     if (path.posix.isAbsolute(link) || link.includes("\\") || target.split("/")[0] !== name.split("/")[0]) {
       return false;
