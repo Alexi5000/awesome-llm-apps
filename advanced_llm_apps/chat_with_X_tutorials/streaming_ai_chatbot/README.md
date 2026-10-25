@@ -153,3 +153,14 @@ Perfect for demonstrating how Motia makes complex real-time applications simple 
 ## 🔑 Environment Variables
 
 - `OPENAI_API_KEY`: Your OpenAI API key (required)
+
+## Scheduler dependency maintenance
+
+The npm override for `node-cron@3.0.3` selects UUID 11.1.1, fixing
+[GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq).
+The scheduler only uses the retained CommonJS `v4()` API. Tests exercise
+foreground and child-process jobs, generated and explicit names, cancellation,
+and rejection of out-of-bounds UUID writes through the actual scheduler's
+dependency resolution. Install with `npm ci` and run `npm test` to verify.
+Remove this scoped override when Motia adopts a scheduler with a patched UUID
+dependency; retain the runtime compatibility tests when upgrading.
