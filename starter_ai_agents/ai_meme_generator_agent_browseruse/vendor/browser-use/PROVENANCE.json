@@ -4,7 +4,7 @@
   "sdist_url": "https://files.pythonhosted.org/packages/0c/d5/7020c94801f73d8bc650f01418b35a8191a0cf6e6c6af29fda9d200ac713/browser_use-0.13.11.tar.gz",
   "sdist_sha256": "abec8573ebc9f8801b688c38b5988d90bb030d1448b8760f37f85f68a0ed7812",
   "metadata_replacements": {
-    "version = \"0.13.11\"": "version = \"0.13.11+techtide.1\"",
+    "version = \"0.13.11\"": "version = \"0.13.11+techtide.3\"",
     "aiohttp==3.14.3": "aiohttp==3.14.4",
     "anyio==4.12.1": "anyio==4.14.2",
     "mcp==2.1.1": "mcp==2.2.0",
@@ -189,11 +189,50 @@
     "browser_use/tools/extraction/__init__.py": "bdf0f25bccd6ca8bede98ac08fea146bd60434135c305aaf5f6fb6d274a8dd9f",
     "browser_use/tools/extraction/schema_utils.py": "e4536393a9e4f985359d269dd6ea558e4796b67969a6b673f89bfd24bee94092",
     "browser_use/tools/extraction/views.py": "5987ed1eedf5ebe3a4ec4576ea8a8433e8cbe80d4ceb5135ca4a657ea5821e2a",
-    "browser_use/tools/registry/service.py": "3517c114d622a415c9da48ede49b5b625c97a1169161478541c68a05b8ae495e",
+    "browser_use/tools/registry/service.py": "3fd7cd55af396d3f2afcb175898f74c5ddeba51c5b85dc41f2587cd4860a90ab",
     "browser_use/tools/registry/views.py": "5150f29c1c22c6634666509b4f152897124c99d73f4be0ea01516156db1460c6",
     "browser_use/tools/service.py": "25746ddfe719c0a800b2b4fcc399aea4fc8be20c48b04ab4118841fd5419eb73",
     "browser_use/tools/utils.py": "c6f28e6995ba43cdeaa37423791df5651e9e778fc37e4acfeed642fcd3ae2cfa",
     "browser_use/tools/views.py": "7dcdadaf8641e21fb4eaa937e9800468b9bdcb99acad95c8008690786c874231",
-    "browser_use/utils.py": "943b405e06cabb3d5c4abd6ff744e517b1e11088b2fb26a1023a6dfda8afde4e"
-  }
+    "browser_use/utils.py": "92107250c41947b348e2d4afe35ade7858b849f56a72f8a78514d30b22626bd2"
+  },
+  "source_patches": {
+    "browser_use/tools/registry/service.py": {
+      "original_sha256": "3517c114d622a415c9da48ede49b5b625c97a1169161478541c68a05b8ae495e",
+      "replacements": [
+        [
+          "\t\t\turl_info = f' on {current_url}' if current_url and not is_new_tab_page(current_url) else ''\n\t\t\tlogger.info(f'\ud83d\udd12 Using sensitive data placeholders: {\", \".join(sorted(placeholders_used))}{url_info}')",
+          "\t\t\tlogger.info('Using sensitive data placeholders (count=%d)', len(placeholders_used))"
+        ],
+        [
+          "\t\t\tlogger.warning(f'Missing or empty keys in sensitive_data dictionary: {\", \".join(all_missing_placeholders)}')",
+          "\t\t\tlogger.warning('Missing or empty sensitive data placeholders (count=%d)', len(all_missing_placeholders))"
+        ]
+      ],
+      "purpose": "Do not log secret placeholder labels or page URLs; retain counts and substitution behavior."
+    },
+    "browser_use/utils.py": {
+      "original_sha256": "943b405e06cabb3d5c4abd6ff744e517b1e11088b2fb26a1023a6dfda8afde4e",
+      "replacements": [
+        [
+          "logger.error(f'\u26d4\ufe0f Multiple wildcards in pattern=[{domain_pattern}] are not supported')",
+          "logger.error('Multiple wildcards in domain patterns are not supported')"
+        ],
+        [
+          "logger.error(f'\u26d4\ufe0f Wildcard TLDs like in pattern=[{domain_pattern}] are not supported for security')",
+          "logger.error('Wildcard top-level domains are not supported')"
+        ],
+        [
+          "logger.error(f'\u26d4\ufe0f Only *.domain style patterns are supported, ignoring pattern=[{domain_pattern}]')",
+          "logger.error('Only leading subdomain wildcards are supported')"
+        ],
+        [
+          "logger.error(f'\u26d4\ufe0f Error matching URL {url} with pattern {domain_pattern}: {type(e).__name__}: {e}')",
+          "logger.error('Unable to match URL against domain policy')"
+        ]
+      ],
+      "purpose": "Keep URL, domain policy and exception data out of diagnostics while retaining fail-closed matching."
+    }
+  },
+  "local_version": "0.13.11+techtide.3"
 }
